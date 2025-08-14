@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: audit-service
+  profiles:
+    active: local
+
+server:
+  port: 8086
+  servlet:
+    context-path: /api/audit
+

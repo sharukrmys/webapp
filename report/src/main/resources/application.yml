@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: report-service
+  profiles:
+    active: local
+
+server:
+  port: 8085
+  servlet:
+    context-path: /api/reports
+

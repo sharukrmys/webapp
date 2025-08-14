@@ -1,0 +1,47 @@
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+dependencies {
+    // Spring Boot starters
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+    api 'org.springframework.boot:spring-boot-starter-cache'
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+    api 'org.springframework.boot:spring-boot-starter-security'
+    
+    // AWS dependencies
+    api 'software.amazon.awssdk:s3:2.25.0'
+    api 'software.amazon.awssdk:sqs:2.25.0'
+    api 'software.amazon.awssdk:secretsmanager:2.25.0'
+    
+    // Database
+    api 'org.postgresql:postgresql:42.7.2'
+    api 'com.zaxxer:HikariCP:5.1.0'
+    
+    // Redis
+    api 'org.redisson:redisson-spring-boot-starter:3.27.2'
+    
+    // Minio (S3 compatible)
+    api 'io.minio:minio:8.5.9'
+    
+    // JWT and Security
+    api 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+    
+    // Utilities
+    api 'com.google.guava:guava:33.0.0-jre'
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'org.apache.commons:commons-lang3:3.14.0'
+    api 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+}
+

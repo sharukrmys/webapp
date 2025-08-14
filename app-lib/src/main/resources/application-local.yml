@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    master:
+      url: jdbc:postgresql://localhost:5432/master_db
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        minimum-idle: 1
+        maximum-pool-size: 5
+        idle-timeout: 30000
+        pool-name: MasterHikariPool
+
+multitenancy:
+  tenant-header: X-Tenant-ID
+  tenant-parameter: tenantId
+  default-tenant: default
+
+redis:
+  enabled: false
+  host: localhost
+  port: 6379
+  database: 0
+  timeout: 10000
+  cache:
+    enabled: false
+    ttl: 3600
+
+aws:
+  enabled: false
+  region: us-east-1
+  endpoint-override: http://localhost:4566
+  s3:
+    bucket: local-bucket
+  sqs:
+    queue-url: http://localhost:4566/000000000000/local-queue
+  secretsmanager:
+    enabled: false
+
+minio:
+  enabled: true
+  endpoint: http://localhost:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucket: local-bucket
+
+logging:
+  level:
+    com.example: DEBUG
+    org.springframework: INFO
+    org.hibernate: INFO
+

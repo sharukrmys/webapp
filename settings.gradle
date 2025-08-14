@@ -1,0 +1,10 @@
+rootProject.name = 'multi-module-spring-boot'
+
+include 'app-lib'
+include 'user-management'
+include 'data'
+include 'attachment'
+include 'metadata'
+include 'report'
+include 'audit'
+
