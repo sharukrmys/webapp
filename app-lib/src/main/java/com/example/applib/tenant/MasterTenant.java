@@ -5,9 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @Entity
 @Table(name = "master_tenant")
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class MasterTenant {
@@ -15,53 +15,52 @@ public class MasterTenant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "tenant_id", nullable = false)
+    
+    @Column(name = "tenant_id")
     private String tenantId;
-
-    @Column(name = "url", nullable = false)
+    
+    @Column(name = "url")
     private String url;
-
-    @Column(name = "username", nullable = false)
+    
+    @Column(name = "username")
     private String username;
-
-    @Column(name = "password", nullable = false)
+    
+    @Column(name = "password")
     private String password;
-
-    @Column(name = "dialect", nullable = false)
+    
+    @Column(name = "dialect")
     private String dialect;
-
-    @Column(name = "version", nullable = false)
-    private Integer version;
-
+    
+    @Column(name = "version")
+    private int version;
+    
     @Column(name = "flexdb")
-    private String flexDb;
-
-    @Column(name = "readdb")
-    private String readDb;
-
-    @Column(name = "appstoredb")
-    private String appStoreDb;
-
-    @Column(name = "procedures_filename", columnDefinition = "varchar(255) DEFAULT 'procedures.sql'")
+    private String flexdb;
+    
+    @Column(name = "procedures_filename")
     private String proceduresFilename;
-
-    @Column(name = "db_properties", columnDefinition = "text DEFAULT '{\"minIdle\": 1,\"maxPoolSize\":3,\"connectionTimeout\":1,\"idleTimeout\":1}'")
+    
+    @Column(name = "readdb")
+    private String readdb;
+    
+    @Column(name = "appstoredb")
+    private String appstoredb;
+    
+    @Column(name = "db_properties")
     private String dbProperties;
-
-    @Column(name = "isactive", columnDefinition = "boolean DEFAULT true")
-    private Boolean isActive;
-
-    @Column(name = "minidle")
-    private Integer minIdle;
-
-    @Column(name = "maxpoolsize")
-    private Integer maxPoolSize;
-
+    
+    @Column(name = "isactive")
+    private Boolean isActive = true;
+    
     @Column(name = "connectiontimeout")
     private Long connectionTimeout;
-
+    
     @Column(name = "idletimeout")
     private Long idleTimeout;
+    
+    @Column(name = "maxpoolsize")
+    private Integer maxPoolSize;
+    
+    @Column(name = "minidle")
+    private Integer minIdle;
 }
-

@@ -1,27 +1,18 @@
 package com.example.applib.tenant;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.springframework.util.StringUtils;
 
 @Slf4j
-public class TenantSchemaResolver implements CurrentTenantIdentifierResolver<String> {
+public class TenantSchemaResolver {
 
-    private static final String DEFAULT_TENANT = "default";
-
-    @Override
     public String resolveCurrentTenantIdentifier() {
         String tenantId = TenantContext.getTenantId();
-        if (!StringUtils.hasText(tenantId)) {
-            log.warn("No tenant ID found in context, using default tenant");
-            return DEFAULT_TENANT;
+        if (tenantId != null) {
+            log.debug("Resolved tenant ID: {}", tenantId);
+            return tenantId;
         }
-        return tenantId;
-    }
-
-    @Override
-    public boolean validateExistingCurrentSessions() {
-        return true;
+        
+        log.debug("No tenant ID found in context, using default");
+        return "default";
     }
 }
-

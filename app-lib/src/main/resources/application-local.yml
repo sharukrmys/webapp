@@ -2,51 +2,41 @@ spring:
   datasource:
     master:
       url: jdbc:postgresql://localhost:5432/master_db
-      username: postgres
-      password: postgres
-      driver-class-name: org.postgresql.Driver
-      hikari:
-        minimum-idle: 1
-        maximum-pool-size: 5
-        idle-timeout: 30000
-        pool-name: MasterHikariPool
-
-multitenancy:
-  tenant-header: X-Tenant-ID
-  tenant-parameter: tenantId
-  default-tenant: default
-
-redis:
-  enabled: false
-  host: localhost
-  port: 6379
-  database: 0
-  timeout: 10000
-  cache:
+      username: ${DB_USERNAME:postgres}
+      password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  redis:
     enabled: false
-    ttl: 3600
+  kafka:
+    enabled: false
 
 aws:
-  enabled: false
-  region: us-east-1
-  endpoint-override: http://localhost:4566
   s3:
-    bucket: local-bucket
+    enabled: false
   sqs:
-    queue-url: http://localhost:4566/000000000000/local-queue
+    enabled: false
   secretsmanager:
     enabled: false
 
 minio:
   enabled: true
-  endpoint: http://localhost:9000
-  accessKey: minioadmin
-  secretKey: minioadmin
-  bucket: local-bucket
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket-name: main-bucket
+  schema-bucket-name: schema-bucket
+  image-bucket-name: image-bucket
+  flex-bucket-name: flex-bucket
+  company-profile-bucket-name: profile-bucket
+  data-management-bucket-name: data-bucket
 
 logging:
   level:
     com.example: DEBUG
     org.springframework: INFO
-    org.hibernate: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 

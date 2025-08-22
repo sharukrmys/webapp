@@ -1,0 +1,56 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multi-module-spring-boot-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api.example.com
+    http:
+      paths:
+      - path: /data(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: data-service
+            port:
+              number: 80
+      - path: /attachment(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: attachment-service
+            port:
+              number: 80
+      - path: /metadata(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: metadata-service
+            port:
+              number: 80
+      - path: /user(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: user-management-service
+            port:
+              number: 80
+      - path: /report(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: report-service
+            port:
+              number: 80
+      - path: /audit(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: audit-service
+            port:
+              number: 80
+

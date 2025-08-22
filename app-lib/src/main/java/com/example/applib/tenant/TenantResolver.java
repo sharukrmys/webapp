@@ -56,4 +56,3 @@ public class TenantResolver {
         return null;
     }
 }
-
