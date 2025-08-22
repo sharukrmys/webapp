@@ -8,3 +8,8 @@ include 'user-management'
 include 'report'
 include 'audit'
 
+// Configure Java toolchain for all projects
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+}
+

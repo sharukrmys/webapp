@@ -23,8 +23,9 @@ subprojects {
     apply plugin: 'jacoco'
     
     java {
-        sourceCompatibility = '21'
-        targetCompatibility = '21'
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
     }
     
     dependencies {
@@ -91,5 +92,11 @@ bootJar {
 
 jar {
     enabled = true
+}
+
+// Configure Gradle wrapper task
+wrapper {
+    gradleVersion = '8.5'
+    distributionType = 'BIN'
 }
 
