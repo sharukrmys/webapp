@@ -42,15 +42,15 @@ INSERT INTO public.master_tenant (
     db_properties, isactive
 ) VALUES (
     'org.hibernate.dialect.PostgreSQL9Dialect', 
-    'postgres', 
+    'db_password', 
     'tenant1', 
-    'jdbc:postgresql://postgres:5432/tenant1_tac', 
-    'postgres', 
+    'jdbc:postgresql://localhost:5432/tenant1_tac', 
+    'db_user', 
     0, 
-    'jdbc:postgresql://postgres:5432/tenant1_flex', 
+    'jdbc:postgresql://localhost:5432/tenant1_flex', 
     'procedures.sql', 
-    'jdbc:postgresql://postgres:5432/tenant1_read', 
-    'jdbc:postgresql://postgres:5432/tenant1_appstore', 
+    'jdbc:postgresql://localhost:5432/tenant1_read', 
+    'jdbc:postgresql://localhost:5432/tenant1_appstore', 
     '{"minIdle": 1,"maxPoolSize":3,"connectionTimeout":30000,"idleTimeout":600000}', 
     true
 );
@@ -61,8 +61,8 @@ INSERT INTO public.turbos3config (
     bucketname, schemabucketname, imagebucketname, 
     flexbucketname, companyprofilebucketname, datamanagementbucketname
 ) VALUES (
-    'minioadmin', 
-    'minioadmin', 
+    'your_access_key', 
+    'your_secret_key', 
     'us-east-1', 
     'main-bucket', 
     'schema-bucket', 
