@@ -1,48 +1,47 @@
 spring:
   datasource:
     master:
-      url: jdbc:postgresql://prod-db-host:5432/master_db
+      url: jdbc:postgresql://prod-postgres:5432/master_db
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}
-      driver-class-name: org.postgresql.Driver
       hikari:
-        minimum-idle: 5
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
         maximum-pool-size: 20
-        idle-timeout: 30000
-        pool-name: MasterHikariPool
-
-multitenancy:
-  tenant-header: X-Tenant-ID
-  tenant-parameter: tenantId
-  default-tenant: default
-
-redis:
-  enabled: true
-  host: prod-redis-host
-  port: 6379
-  password: ${REDIS_PASSWORD}
-  database: 0
-  timeout: 10000
-  cache:
+        minimum-idle: 10
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+  redis:
     enabled: true
-    ttl: 3600
+    sentinel:
+      master: mymaster
+      nodes: prod-redis-sentinel-0:26379,prod-redis-sentinel-1:26379,prod-redis-sentinel-2:26379
+    password: ${REDIS_PASSWORD}
+    lettuce:
+      pool:
+        max-active: 16
+        max-idle: 16
+        min-idle: 8
+        max-wait: -1
+  kafka:
+    enabled: true
+    bootstrap-servers: prod-kafka-0:9092,prod-kafka-1:9092,prod-kafka-2:9092
 
 aws:
-  enabled: true
-  region: us-east-1
+  region: ${AWS_REGION:us-east-1}
   s3:
-    bucket: prod-bucket
+    enabled: true
   sqs:
-    queue-url: https://sqs.us-east-1.amazonaws.com/123456789012/prod-queue
+    enabled: true
   secretsmanager:
     enabled: true
 
-minio:
-  enabled: false
-
 logging:
   level:
-    com.example: WARN
+    root: WARN
+    com.example: INFO
     org.springframework: WARN
-    org.hibernate: WARN
 

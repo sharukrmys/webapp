@@ -1,48 +1,34 @@
 spring:
   datasource:
     master:
-      url: jdbc:postgresql://qa-db-host:5432/master_db
+      url: jdbc:postgresql://qa-postgres:5432/master_db
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}
-      driver-class-name: org.postgresql.Driver
-      hikari:
-        minimum-idle: 2
-        maximum-pool-size: 10
-        idle-timeout: 30000
-        pool-name: MasterHikariPool
-
-multitenancy:
-  tenant-header: X-Tenant-ID
-  tenant-parameter: tenantId
-  default-tenant: default
-
-redis:
-  enabled: true
-  host: qa-redis-host
-  port: 6379
-  password: ${REDIS_PASSWORD}
-  database: 0
-  timeout: 10000
-  cache:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  redis:
     enabled: true
-    ttl: 3600
+    sentinel:
+      master: mymaster
+      nodes: qa-redis-sentinel-0:26379,qa-redis-sentinel-1:26379,qa-redis-sentinel-2:26379
+    password: ${REDIS_PASSWORD}
+  kafka:
+    enabled: true
+    bootstrap-servers: qa-kafka-0:9092,qa-kafka-1:9092,qa-kafka-2:9092
 
 aws:
-  enabled: true
-  region: us-east-1
+  region: ${AWS_REGION:us-east-1}
   s3:
-    bucket: qa-bucket
+    enabled: true
   sqs:
-    queue-url: https://sqs.us-east-1.amazonaws.com/123456789012/qa-queue
+    enabled: true
   secretsmanager:
     enabled: true
 
-minio:
-  enabled: false
-
 logging:
   level:
-    com.example: DEBUG
+    com.example: INFO
     org.springframework: INFO
-    org.hibernate: INFO
 
