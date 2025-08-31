@@ -16,22 +16,22 @@ public class JdbcTemplateService {
 
     @Qualifier("masterJdbcTemplate")
     private final JdbcTemplate masterJdbcTemplate;
-    
+
     @Qualifier("tacJdbcTemplate")
     private final JdbcTemplate tacJdbcTemplate;
-    
+
     @Qualifier("flexJdbcTemplate")
     private final JdbcTemplate flexJdbcTemplate;
-    
+
     @Qualifier("readJdbcTemplate")
     private final JdbcTemplate readJdbcTemplate;
-    
+
     @Qualifier("appstoreJdbcTemplate")
     private final JdbcTemplate appstoreJdbcTemplate;
 
     /**
      * Execute a query on the master database
-     * 
+     *
      * @param sql SQL query
      * @param args Query arguments
      * @return Query results
@@ -42,7 +42,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute a query on the TAC database
-     * 
+     *
      * @param sql SQL query
      * @param args Query arguments
      * @return Query results
@@ -53,7 +53,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute a query on the FLEX database
-     * 
+     *
      * @param sql SQL query
      * @param args Query arguments
      * @return Query results
@@ -64,7 +64,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute a query on the READ database
-     * 
+     *
      * @param sql SQL query
      * @param args Query arguments
      * @return Query results
@@ -75,7 +75,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute a query on the APPSTORE database
-     * 
+     *
      * @param sql SQL query
      * @param args Query arguments
      * @return Query results
@@ -86,7 +86,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute an update on the TAC database
-     * 
+     *
      * @param sql SQL update
      * @param args Update arguments
      * @return Number of rows affected
@@ -97,7 +97,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute an update on the FLEX database
-     * 
+     *
      * @param sql SQL update
      * @param args Update arguments
      * @return Number of rows affected
@@ -108,7 +108,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute a batch update on the TAC database
-     * 
+     *
      * @param sql SQL update
      * @param batchArgs Batch arguments
      * @return Array of rows affected
@@ -119,7 +119,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute a batch update on the FLEX database
-     * 
+     *
      * @param sql SQL update
      * @param batchArgs Batch arguments
      * @return Array of rows affected
@@ -130,7 +130,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute a query for a specific tenant
-     * 
+     *
      * @param tenantId Tenant ID
      * @param sql SQL query
      * @param args Query arguments
@@ -139,7 +139,7 @@ public class JdbcTemplateService {
     public List<Map<String, Object>> queryForTenant(String tenantId, String sql, Object... args) {
         // Set the tenant context
         TenantContext.setTenantId(tenantId);
-        
+
         try {
             // Execute the query
             return tacJdbcTemplate.queryForList(sql, args);
@@ -151,7 +151,7 @@ public class JdbcTemplateService {
 
     /**
      * Execute an update for a specific tenant
-     * 
+     *
      * @param tenantId Tenant ID
      * @param sql SQL update
      * @param args Update arguments
@@ -160,7 +160,7 @@ public class JdbcTemplateService {
     public int updateForTenant(String tenantId, String sql, Object... args) {
         // Set the tenant context
         TenantContext.setTenantId(tenantId);
-        
+
         try {
             // Execute the update
             return tacJdbcTemplate.update(sql, args);

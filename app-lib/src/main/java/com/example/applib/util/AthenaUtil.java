@@ -39,7 +39,7 @@ public class AthenaUtil {
 
     /**
      * Execute a query and wait for the results
-     * 
+     *
      * @param query The SQL query to execute
      * @param database The database name
      * @return List of rows as maps
@@ -62,7 +62,7 @@ public class AthenaUtil {
 
     /**
      * Start a query execution
-     * 
+     *
      * @param query The SQL query to execute
      * @param database The database name
      * @return The query execution ID
@@ -98,7 +98,7 @@ public class AthenaUtil {
 
     /**
      * Wait for a query to complete
-     * 
+     *
      * @param queryExecutionId The query execution ID
      * @throws InterruptedException If the thread is interrupted
      */
@@ -136,7 +136,7 @@ public class AthenaUtil {
 
     /**
      * Get the results of a query
-     * 
+     *
      * @param queryExecutionId The query execution ID
      * @return List of rows as maps
      */

@@ -12,20 +12,20 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = true)
 public class RedisUtil {
 
     private final RedissonClient redissonClient;
 
-    @Value("${redis.lock.wait-time:10}")
+    @Value("${spring.data.redis.lock.wait-time:10}")
     private int lockWaitTime;
 
-    @Value("${redis.lock.lease-time:30}")
+    @Value("${spring.data.redis.lock.lease-time:30}")
     private int lockLeaseTime;
 
     /**
      * Publish a message to a Redis topic
-     * 
+     *
      * @param topic The topic name
      * @param message The message to publish
      * @return The number of subscribers that received the message
@@ -42,7 +42,7 @@ public class RedisUtil {
 
     /**
      * Subscribe to a Redis topic
-     * 
+     *
      * @param topic The topic name
      * @param messageClass The class of the message
      * @param messageHandler The message handler
@@ -60,7 +60,7 @@ public class RedisUtil {
 
     /**
      * Unsubscribe from a Redis topic
-     * 
+     *
      * @param topic The topic name
      * @param listenerId The listener ID
      */
@@ -76,7 +76,7 @@ public class RedisUtil {
 
     /**
      * Add a message to a Redis queue
-     * 
+     *
      * @param queueName The queue name
      * @param message The message to add
      */
@@ -92,7 +92,7 @@ public class RedisUtil {
 
     /**
      * Take a message from a Redis queue (blocking operation)
-     * 
+     *
      * @param queueName The queue name
      * @param timeout The timeout in seconds
      * @return The message or null if timeout
@@ -109,7 +109,7 @@ public class RedisUtil {
 
     /**
      * Add a delayed message to a Redis queue
-     * 
+     *
      * @param queueName The queue name
      * @param message The message to add
      * @param delay The delay in seconds
@@ -126,7 +126,7 @@ public class RedisUtil {
 
     /**
      * Acquire a distributed lock
-     * 
+     *
      * @param lockName The lock name
      * @return true if lock acquired, false otherwise
      */
@@ -142,7 +142,7 @@ public class RedisUtil {
 
     /**
      * Release a distributed lock
-     * 
+     *
      * @param lockName The lock name
      */
     public void releaseLock(String lockName) {
@@ -159,7 +159,7 @@ public class RedisUtil {
 
     /**
      * Execute a function with a distributed lock
-     * 
+     *
      * @param lockName The lock name
      * @param function The function to execute
      * @return The function result
@@ -178,10 +178,10 @@ public class RedisUtil {
             }
         }
     }
-    
+
     /**
      * Get a distributed rate limiter
-     * 
+     *
      * @param name The rate limiter name
      * @param rate The rate (permits per second)
      * @param rateInterval The rate interval in seconds
@@ -192,10 +192,10 @@ public class RedisUtil {
         rateLimiter.trySetRate(RateType.OVERALL, rate, rateInterval, RateIntervalUnit.SECONDS);
         return rateLimiter;
     }
-    
+
     /**
      * Get a distributed semaphore
-     * 
+     *
      * @param name The semaphore name
      * @param permits The number of permits
      * @return The semaphore
@@ -205,20 +205,20 @@ public class RedisUtil {
         semaphore.trySetPermits(permits);
         return semaphore;
     }
-    
+
     /**
      * Get a distributed map
-     * 
+     *
      * @param name The map name
      * @return The map
      */
     public <K, V> RMap<K, V> getMap(String name) {
         return redissonClient.getMap(name);
     }
-    
+
     /**
      * Get a distributed map with TTL
-     * 
+     *
      * @param name The map name
      * @param ttl The TTL in seconds
      * @return The map
@@ -229,3 +229,4 @@ public class RedisUtil {
         return map;
     }
 }
+

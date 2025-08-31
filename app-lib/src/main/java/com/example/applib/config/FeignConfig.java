@@ -51,7 +51,7 @@ public class FeignConfig {
         @Override
         public Exception decode(String methodKey, feign.Response response) {
             log.error("Error in Feign client call: {} - Status: {}", methodKey, response.status());
-            
+
             // You can customize error handling based on response status or body
             if (response.status() >= 500) {
                 log.error("Server error in Feign client call");
@@ -60,7 +60,7 @@ public class FeignConfig {
                 log.error("Resource not found in Feign client call");
                 // You could return a custom exception here
             }
-            
+
             // Default error handling
             return defaultErrorDecoder.decode(methodKey, response);
         }

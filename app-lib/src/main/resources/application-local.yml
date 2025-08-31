@@ -1,42 +1,39 @@
+# Local environment configuration
 spring:
   datasource:
     master:
       url: jdbc:postgresql://localhost:5432/master_db
-      username: ${DB_USERNAME:postgres}
-      password: ${DB_PASSWORD:postgres}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
+      username: postgres
+      password: postgres
+  
+  # Disable Redis in local mode
   redis:
     enabled: false
+  
+  # Disable Kafka in local mode
   kafka:
     enabled: false
 
+# AWS services use localstack in local mode
 aws:
+  region: us-east-1
   s3:
-    enabled: false
+    endpoint: http://localhost:4566
   sqs:
-    enabled: false
+    endpoint: http://localhost:4566
   secretsmanager:
-    enabled: false
+    endpoint: http://localhost:4566
 
+# Use local Minio instance
 minio:
-  enabled: true
-  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
-  access-key: ${MINIO_ACCESS_KEY:minioadmin}
-  secret-key: ${MINIO_SECRET_KEY:minioadmin}
-  bucket-name: main-bucket
-  schema-bucket-name: schema-bucket
-  image-bucket-name: image-bucket
-  flex-bucket-name: flex-bucket
-  company-profile-bucket-name: profile-bucket
-  data-management-bucket-name: data-bucket
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
 
+# Enable debug logging in local mode
 logging:
   level:
     com.example: DEBUG
     org.springframework: INFO
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 

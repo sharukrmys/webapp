@@ -25,10 +25,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 public class S3Service {
 
     private final TurboS3ConfigRepository turboS3ConfigRepository;
-    
+
     @Value("${aws.s3.enabled:true}")
     private boolean awsS3Enabled;
-    
+
     @Value("${minio.enabled:false}")
     private boolean minioEnabled;
 
@@ -63,7 +63,7 @@ public class S3Service {
 
     @Configuration
     static class S3Configuration {
-        
+
         @Bean
         @Primary
         @ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true")
@@ -71,7 +71,7 @@ public class S3Service {
             TurboS3Config config = repository.findAll().stream()
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("No S3 configuration found"));
-            
+
             return S3Client.builder()
                     .region(Region.of(config.getRegion()))
                     .credentialsProvider(StaticCredentialsProvider.create(
@@ -82,7 +82,7 @@ public class S3Service {
                     ))
                     .build();
         }
-        
+
         @Bean
         @Profile("local")
         @ConditionalOnProperty(name = "minio.enabled", havingValue = "true")
@@ -90,7 +90,7 @@ public class S3Service {
                 @Value("${minio.endpoint}") String endpoint,
                 @Value("${minio.access-key}") String accessKey,
                 @Value("${minio.secret-key}") String secretKey) {
-            
+
             return MinioClient.builder()
                     .endpoint(endpoint)
                     .credentials(accessKey, secretKey)

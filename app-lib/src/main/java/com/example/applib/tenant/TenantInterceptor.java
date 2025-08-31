@@ -16,7 +16,7 @@ public class TenantInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String tenantId = request.getHeader(TENANT_HEADER);
-        
+
         if (tenantId != null && !tenantId.isEmpty()) {
             log.debug("Tenant ID found in header: {}", tenantId);
             TenantContext.setTenantId(tenantId);
@@ -26,7 +26,7 @@ public class TenantInterceptor implements HandlerInterceptor {
             // For now, we'll set a default tenant
             TenantContext.setTenantId("default");
         }
-        
+
         return true;
     }
 

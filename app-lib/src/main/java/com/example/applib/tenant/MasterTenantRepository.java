@@ -7,10 +7,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MasterTenantRepository extends JpaRepository<MasterTenant, Long> {
-    
+
     Optional<MasterTenant> findByTenantId(String tenantId);
-    
+
     Optional<MasterTenant> findByTenantIdAndIsActiveTrue(String tenantId);
-    
+
     List<MasterTenant> findByIsActiveTrue();
 }

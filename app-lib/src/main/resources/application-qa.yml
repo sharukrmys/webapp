@@ -1,34 +1,41 @@
+# QA environment configuration
 spring:
   datasource:
     master:
       url: jdbc:postgresql://qa-postgres:5432/master_db
-      username: ${DB_USERNAME}
-      password: ${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
+      username: postgres
+      password: postgres
+  
+  # Enable Redis in QA mode
   redis:
     enabled: true
-    sentinel:
-      master: mymaster
-      nodes: qa-redis-sentinel-0:26379,qa-redis-sentinel-1:26379,qa-redis-sentinel-2:26379
-    password: ${REDIS_PASSWORD}
+    host: qa-redis
+  
+  # Enable Kafka in QA mode
   kafka:
     enabled: true
-    bootstrap-servers: qa-kafka-0:9092,qa-kafka-1:9092,qa-kafka-2:9092
+    bootstrap-servers: qa-kafka:9092
 
+# AWS services use QA endpoints
 aws:
-  region: ${AWS_REGION:us-east-1}
+  region: us-east-1
   s3:
-    enabled: true
+    endpoint: https://s3.us-east-1.amazonaws.com
+    bucket-name: qa-multi-tenant-bucket
   sqs:
-    enabled: true
+    endpoint: https://sqs.us-east-1.amazonaws.com
+    queue-name: qa-multi-tenant-queue
   secretsmanager:
-    enabled: true
+    endpoint: https://secretsmanager.us-east-1.amazonaws.com
 
+# Use AWS S3 in QA
+minio:
+  enabled: false
+
+# Logging configuration for QA
 logging:
   level:
     com.example: INFO
     org.springframework: INFO
+    org.hibernate.SQL: INFO
 

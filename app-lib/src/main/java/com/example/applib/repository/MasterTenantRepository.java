@@ -7,8 +7,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MasterTenantRepository extends JpaRepository<MasterTenant, Long> {
-    
+
     Optional<MasterTenant> findByTenantId(String tenantId);
-    
+
     boolean existsByTenantId(String tenantId);
 }

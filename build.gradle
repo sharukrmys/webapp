@@ -1,8 +1,8 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.4' apply false
-    id 'io.spring.dependency-management' version '1.1.4' apply false
-    id 'com.diffplug.spotless' version '6.25.0' apply false
+    id 'org.springframework.boot' version "${springBootVersion}" apply false
+    id 'io.spring.dependency-management' version "${dependencyManagementVersion}" apply false
+    id 'com.diffplug.spotless' version '6.25.0'
     id 'jacoco'
 }
 
@@ -23,19 +23,15 @@ subprojects {
     apply plugin: 'jacoco'
     
     java {
-        sourceCompatibility = '17'
-        targetCompatibility = '17'
-    }
-    
-    dependencyManagement {
-        imports {
-            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.0"
-        }
+        // Set source compatibility to Java 17 for local development
+        // but target compatibility to Java 21 for production
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.toVersion(javaVersion)
     }
     
     dependencies {
-        // Spring Boot
-        implementation 'org.springframework.boot:spring-boot-starter-web'
+        // Common dependencies for all subprojects
+        implementation 'org.springframework.boot:spring-boot-starter'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
         
@@ -43,12 +39,35 @@ subprojects {
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         
+        // Guava
+        implementation 'com.google.guava:guava:33.0.0-jre'
+        
+        // Nimbus JOSE JWT
+        implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+        
         // Testing
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
-        testImplementation 'org.junit.jupiter:junit-jupiter-api'
-        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-        testImplementation 'org.mockito:mockito-core'
-        testImplementation 'org.mockito:mockito-junit-jupiter'
+    }
+    
+    spotless {
+        java {
+            importOrder()
+            removeUnusedImports()
+            trimTrailingWhitespace()
+            indentWithSpaces(4)
+            endWithNewline()
+        }
+    }
+    
+    jacoco {
+        toolVersion = "0.8.11"
+    }
+    
+    jacocoTestReport {
+        reports {
+            xml.required = true
+            html.required = true
+        }
     }
     
     test {
@@ -56,27 +75,36 @@ subprojects {
         finalizedBy jacocoTestReport
     }
     
-    jacocoTestReport {
-        dependsOn test
-        reports {
-            xml.required = true
-            html.required = true
-        }
-    }
-    
-    spotless {
-        java {
-            importOrder()
-            removeUnusedImports()
-        }
-    }
-    
-    tasks.named('bootJar') {
+    // Disable bootJar for library modules
+    bootJar {
         enabled = false
     }
     
-    tasks.named('jar') {
+    jar {
         enabled = true
     }
+    
+    // Apply Spring Cloud dependencies to all subprojects
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            mavenBom "software.amazon.awssdk:bom:2.25.12"
+        }
+    }
+}
+
+// Root project configuration
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+// Configure Gradle wrapper task
+wrapper {
+    gradleVersion = '8.5'
+    distributionType = 'BIN'
 }
 

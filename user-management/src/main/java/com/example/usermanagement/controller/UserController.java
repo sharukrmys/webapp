@@ -41,15 +41,15 @@ public class UserController {
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
         log.info("Creating new user for tenant: {}", TenantContext.getTenantId());
-        
+
         if (userService.existsByUsername(user.getUsername())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        
+
         if (userService.existsByEmail(user.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        
+
         User savedUser = userService.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
@@ -57,12 +57,12 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
         log.info("Updating user with ID: {} for tenant: {}", id, TenantContext.getTenantId());
-        
+
         Optional<User> existingUser = userService.findById(id);
         if (existingUser.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         user.setId(id);
         User updatedUser = userService.save(user);
         return ResponseEntity.ok(updatedUser);
@@ -71,11 +71,11 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         log.info("Deleting user with ID: {} for tenant: {}", id, TenantContext.getTenantId());
-        
+
         if (!userService.findById(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         userService.deleteById(id);
         return ResponseEntity.noContent().build();
     }

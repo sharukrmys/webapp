@@ -57,16 +57,16 @@ public class DatabaseConfig {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(masterDataSource());
         em.setPackagesToScan("com.example.applib.entity");
-        
+
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
-        
+
         Map<String, Object> properties = new HashMap<>();
         properties.put("hibernate.hbm2ddl.auto", "validate");
         properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         properties.put("hibernate.format_sql", "true");
         em.setJpaPropertyMap(properties);
-        
+
         return em;
     }
 
@@ -95,7 +95,7 @@ public class DatabaseConfig {
                 .filter(MasterTenant::getIsActive)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No active tenant found"));
-        
+
         return new JdbcTemplate(createTenantDataSource(tenant.getUrl(), tenant.getUsername(), tenant.getPassword()));
     }
 
@@ -105,7 +105,7 @@ public class DatabaseConfig {
                 .filter(MasterTenant::getIsActive)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No active tenant found"));
-        
+
         return new JdbcTemplate(createTenantDataSource(tenant.getFlexDb(), tenant.getUsername(), tenant.getPassword()));
     }
 
@@ -115,7 +115,7 @@ public class DatabaseConfig {
                 .filter(MasterTenant::getIsActive)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No active tenant found"));
-        
+
         return new JdbcTemplate(createTenantDataSource(tenant.getReadDb(), tenant.getUsername(), tenant.getPassword()));
     }
 
@@ -125,7 +125,7 @@ public class DatabaseConfig {
                 .filter(MasterTenant::getIsActive)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("No active tenant found"));
-        
+
         return new JdbcTemplate(createTenantDataSource(tenant.getAppstoreDb(), tenant.getUsername(), tenant.getPassword()));
     }
 
@@ -140,7 +140,7 @@ public class DatabaseConfig {
         config.setMaxLifetime(1800000);
         config.setMaximumPoolSize(10);
         config.setMinimumIdle(5);
-        
+
         return new HikariDataSource(config);
     }
 }

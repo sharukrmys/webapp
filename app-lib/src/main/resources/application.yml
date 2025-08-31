@@ -1,82 +1,95 @@
+# Common configuration for all services
 spring:
   application:
-    name: multi-module-spring-boot
+    name: multi-tenant-app
+  
+  # Database configuration
   datasource:
     master:
       url: jdbc:postgresql://localhost:5432/master_db
-      username: ${DB_USERNAME:postgres}
-      password: ${DB_PASSWORD:postgres}
+      username: postgres
+      password: postgres
       driver-class-name: org.postgresql.Driver
       hikari:
-        connection-timeout: 30000
-        idle-timeout: 600000
-        max-lifetime: 1800000
+        minimum-idle: 2
         maximum-pool-size: 10
-        minimum-idle: 5
+        idle-timeout: 30000
+        pool-name: MasterHikariPool
+        max-lifetime: 2000000
+        connection-timeout: 30000
+  
+  # JPA configuration
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-    show-sql: false
+        show_sql: false
+        use_sql_comments: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  
+  # Redis configuration
   redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
+    enabled: true
+    host: localhost
+    port: 6379
+    password:
     timeout: 10000
+    database: 0
     lettuce:
       pool:
         max-active: 8
         max-idle: 8
-        min-idle: 2
-        max-wait: -1
+        min-idle: 0
+        max-wait: -1ms
+  
+  # Kafka configuration
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    enabled: true
+    bootstrap-servers: localhost:9092
     consumer:
-      group-id: ${spring.application.name}
+      group-id: multi-tenant-group
       auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-  cloud:
-    openfeign:
-      client:
-        config:
-          default:
-            connectTimeout: 5000
-            readTimeout: 5000
-            loggerLevel: full
 
+# AWS configuration
+aws:
+  region: us-east-1
+  s3:
+    enabled: true
+    endpoint: http://localhost:4566
+    bucket-name: multi-tenant-bucket
+  sqs:
+    enabled: true
+    endpoint: http://localhost:4566
+    queue-name: multi-tenant-queue
+  secretsmanager:
+    enabled: true
+    endpoint: http://localhost:4566
+
+# Minio configuration
+minio:
+  enabled: true
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: multi-tenant-bucket
+
+# Server configuration
 server:
   port: 8080
   servlet:
     context-path: /api
 
-aws:
-  region: ${AWS_REGION:us-east-1}
-  s3:
-    enabled: true
-  sqs:
-    enabled: true
-  secretsmanager:
-    enabled: true
-
-services:
-  data:
-    url: ${DATA_SERVICE_URL:http://localhost:8081/api}
-  attachment:
-    url: ${ATTACHMENT_SERVICE_URL:http://localhost:8082/api}
-  metadata:
-    url: ${METADATA_SERVICE_URL:http://localhost:8083/api}
-  user-management:
-    url: ${USER_MANAGEMENT_SERVICE_URL:http://localhost:8084/api}
-  report:
-    url: ${REPORT_SERVICE_URL:http://localhost:8085/api}
-  audit:
-    url: ${AUDIT_SERVICE_URL:http://localhost:8086/api}
-
+# Management endpoints
 management:
   endpoints:
     web:
@@ -85,29 +98,21 @@ management:
   endpoint:
     health:
       show-details: always
-      probes:
-        enabled: true
-      group:
-        readiness:
-          include: db,redis
-        liveness:
-          include: ping
+  health:
+    redis:
+      enabled: ${spring.redis.enabled}
 
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operationsSorter: method
-    tagsSorter: alpha
-    disable-swagger-default-url: true
-
+# Logging configuration
 logging:
   level:
     root: INFO
     com.example: DEBUG
     org.springframework: INFO
-    org.hibernate: INFO
-    # Enable Feign client logging
-    com.example.applib.client: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Tenant configuration
+tenant:
+  default-tenant: default
+  header-name: X-TenantID
 

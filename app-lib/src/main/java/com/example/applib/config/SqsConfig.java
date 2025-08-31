@@ -1,60 +1,48 @@
 package com.example.applib.config;
 
-import java.net.URI;
+import com.example.applib.service.FeatureToggleService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 
 @Configuration
+@Slf4j
+@ConditionalOnProperty(name = "aws.sqs.enabled", havingValue = "true")
 public class SqsConfig {
 
-    @Value("${aws.enabled:true}")
-    private boolean awsEnabled;
+    @Value("${aws.region}")
+    private String region;
 
-    @Value("${aws.sqs.enabled:true}")
-    private boolean sqsEnabled;
+    @Autowired
+    private AwsCredentialsProvider awsCredentialsProvider;
 
-    @Value("${aws.endpoint-override:#{null}}")
-    private String endpointOverride;
+    @Autowired
+    private FeatureToggleService featureToggleService;
 
+    /**
+     * Creates an SQS client using the AWS SDK v2.
+     * Uses IAM instance profile credentials by default.
+     *
+     * @return SqsClient
+     */
     @Bean
-    @Profile("!local")
-    public SqsClient sqsClientProd(Region awsRegion, AwsCredentialsProvider awsCredentialsProvider) {
-        if (!awsEnabled || !sqsEnabled) {
-            return null;
+    @ConditionalOnProperty(name = "features.sqs.enabled", havingValue = "true", matchIfMissing = true)
+    public SqsClient sqsClient() {
+        log.info("Configuring SQS client with region: {}", region);
+
+        if (!featureToggleService.isSqsEnabled()) {
+            log.warn("SQS feature is disabled, but SQS client is being created. This may cause issues.");
         }
 
-        SqsClientBuilder builder = SqsClient.builder()
-                .region(awsRegion)
-                .credentialsProvider(awsCredentialsProvider);
-
-        if (endpointOverride != null && !endpointOverride.isEmpty()) {
-            builder.endpointOverride(URI.create(endpointOverride));
-        }
-
-        return builder.build();
-    }
-
-    @Bean
-    @Profile("local")
-    public SqsClient sqsClientLocal(Region awsRegion, AwsCredentialsProvider awsCredentialsProvider) {
-        if (!awsEnabled || !sqsEnabled) {
-            return null;
-        }
-
-        SqsClientBuilder builder = SqsClient.builder()
-                .region(awsRegion)
-                .credentialsProvider(awsCredentialsProvider);
-
-        if (endpointOverride != null && !endpointOverride.isEmpty()) {
-            builder.endpointOverride(URI.create(endpointOverride));
-        }
-
-        return builder.build();
+        return SqsClient.builder()
+                .region(Region.of(region))
+                .credentialsProvider(awsCredentialsProvider)
+                .build();
     }
 }

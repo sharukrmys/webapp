@@ -1,3 +1,4 @@
+# Production environment configuration
 spring:
   datasource:
     master:
@@ -5,43 +6,47 @@ spring:
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}
       hikari:
-        connection-timeout: 30000
-        idle-timeout: 600000
-        max-lifetime: 1800000
+        minimum-idle: 5
         maximum-pool-size: 20
-        minimum-idle: 10
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
+        idle-timeout: 30000
+        max-lifetime: 2000000
+        connection-timeout: 30000
+  
+  # Enable Redis in production mode
   redis:
     enabled: true
-    sentinel:
-      master: mymaster
-      nodes: prod-redis-sentinel-0:26379,prod-redis-sentinel-1:26379,prod-redis-sentinel-2:26379
+    host: prod-redis
     password: ${REDIS_PASSWORD}
-    lettuce:
-      pool:
-        max-active: 16
-        max-idle: 16
-        min-idle: 8
-        max-wait: -1
+  
+  # Enable Kafka in production mode
   kafka:
     enabled: true
-    bootstrap-servers: prod-kafka-0:9092,prod-kafka-1:9092,prod-kafka-2:9092
+    bootstrap-servers: prod-kafka:9092
 
+# AWS services use production endpoints
 aws:
-  region: ${AWS_REGION:us-east-1}
+  region: us-east-1
   s3:
     enabled: true
+    endpoint: https://s3.us-east-1.amazonaws.com
+    bucket-name: prod-multi-tenant-bucket
   sqs:
     enabled: true
+    endpoint: https://sqs.us-east-1.amazonaws.com
+    queue-name: prod-multi-tenant-queue
   secretsmanager:
     enabled: true
+    endpoint: https://secretsmanager.us-east-1.amazonaws.com
 
+# Disable Minio in production (use AWS S3)
+minio:
+  enabled: false
+
+# Logging configuration for production
 logging:
   level:
     root: WARN
     com.example: INFO
     org.springframework: WARN
+    org.hibernate: WARN
 

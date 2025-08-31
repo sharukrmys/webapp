@@ -37,16 +37,16 @@ public class S3Controller {
             // Create a temporary file
             Path tempFile = Files.createTempFile("upload-", "-" + file.getOriginalFilename());
             file.transferTo(tempFile.toFile());
-            
+
             // Generate a unique key for the file
             String keyName = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
-            
+
             // Upload the file to S3
             s3Util.uploadFile(tempFile.toString(), keyName);
-            
+
             // Delete the temporary file
             Files.delete(tempFile);
-            
+
             return ResponseEntity.ok(Map.of(
                     "message", "File uploaded successfully",
                     "keyName", keyName
@@ -64,10 +64,10 @@ public class S3Controller {
         try {
             // Create a temporary file to download to
             Path tempFile = Files.createTempFile("download-", "");
-            
+
             // Download the file from S3
             s3Util.downloadFile(keyName, tempFile.toString());
-            
+
             return ResponseEntity.ok(Map.of(
                     "message", "File downloaded successfully",
                     "filePath", tempFile.toString()
@@ -84,9 +84,9 @@ public class S3Controller {
     public ResponseEntity<Map<String, String>> getPresignedDownloadUrl(
             @PathVariable String keyName,
             @RequestParam(defaultValue = "60") int expirationMinutes) {
-        
+
         URL presignedUrl = s3Util.generatePresignedDownloadUrl(keyName, expirationMinutes);
-        
+
         if (presignedUrl != null) {
             return ResponseEntity.ok(Map.of(
                     "presignedUrl", presignedUrl.toString(),
@@ -103,9 +103,9 @@ public class S3Controller {
     public ResponseEntity<Map<String, String>> getPresignedUploadUrl(
             @PathVariable String keyName,
             @RequestParam(defaultValue = "60") int expirationMinutes) {
-        
+
         URL presignedUrl = s3Util.generatePresignedUploadUrl(keyName, expirationMinutes);
-        
+
         if (presignedUrl != null) {
             return ResponseEntity.ok(Map.of(
                     "presignedUrl", presignedUrl.toString(),
@@ -121,7 +121,7 @@ public class S3Controller {
     @DeleteMapping("/{keyName}")
     public ResponseEntity<Map<String, String>> deleteFile(@PathVariable String keyName) {
         boolean deleted = s3Util.deleteObject(keyName);
-        
+
         if (deleted) {
             return ResponseEntity.ok(Map.of(
                     "message", "File deleted successfully"
@@ -136,7 +136,7 @@ public class S3Controller {
     @GetMapping("/exists/{keyName}")
     public ResponseEntity<Map<String, Boolean>> doesObjectExist(@PathVariable String keyName) {
         boolean exists = s3Util.doesObjectExist(keyName);
-        
+
         return ResponseEntity.ok(Map.of(
                 "exists", exists
         ));
