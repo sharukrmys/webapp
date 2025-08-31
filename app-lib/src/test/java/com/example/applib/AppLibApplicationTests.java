@@ -31,4 +31,3 @@ class AppLibApplicationTests {
         // This test verifies that the Spring context loads successfully
     }
 }
-
