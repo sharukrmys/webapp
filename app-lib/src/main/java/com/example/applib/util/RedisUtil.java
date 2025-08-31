@@ -12,15 +12,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = true)
 public class RedisUtil {
 
     private final RedissonClient redissonClient;
 
-    @Value("${redis.lock.wait-time:10}")
+    @Value("${spring.data.redis.lock.wait-time:10}")
     private int lockWaitTime;
 
-    @Value("${redis.lock.lease-time:30}")
+    @Value("${spring.data.redis.lock.lease-time:30}")
     private int lockLeaseTime;
 
     /**
@@ -229,3 +229,4 @@ public class RedisUtil {
         return map;
     }
 }
+

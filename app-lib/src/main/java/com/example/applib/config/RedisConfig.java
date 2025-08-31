@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.EnableCaching;
@@ -17,7 +16,6 @@ import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisSentinelConfiguration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
@@ -25,68 +23,63 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 @EnableCaching
-@ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = true)
 public class RedisConfig {
 
-    @Value("${spring.redis.mode:standalone}")
+    @Value("${spring.data.redis.mode:standalone}")
     private String redisMode;
 
     // Standalone configuration
-    @Value("${spring.redis.host:localhost}")
+    @Value("${spring.data.redis.host:localhost}")
     private String redisHost;
 
-    @Value("${spring.redis.port:6379}")
+    @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
     // Sentinel configuration
-    @Value("${spring.redis.sentinel.master:#{null}}")
+    @Value("${spring.data.redis.sentinel.master:#{null}}")
     private String sentinelMaster;
 
-    @Value("${spring.redis.sentinel.nodes:#{null}}")
+    @Value("${spring.data.redis.sentinel.nodes:#{null}}")
     private List<String> sentinelNodes;
 
-    @Value("${spring.redis.password:}")
+    @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
     // Pool configuration
-    @Value("${spring.redis.lettuce.pool.max-active:8}")
+    @Value("${spring.data.redis.lettuce.pool.max-active:8}")
     private int maxActive;
 
-    @Value("${spring.redis.lettuce.pool.max-idle:8}")
+    @Value("${spring.data.redis.lettuce.pool.max-idle:8}")
     private int maxIdle;
 
-    @Value("${spring.redis.lettuce.pool.min-idle:2}")
+    @Value("${spring.data.redis.lettuce.pool.min-idle:2}")
     private int minIdle;
 
-    @Value("${spring.redis.lettuce.pool.max-wait:-1}")
+    @Value("${spring.data.redis.lettuce.pool.max-wait:-1}")
     private long maxWait;
 
-    @Value("${spring.redis.timeout:10000}")
+    @Value("${spring.data.redis.timeout:10000}")
     private long timeout;
 
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
-        LettucePoolingClientConfiguration poolConfig = LettucePoolingClientConfiguration.builder()
-                .commandTimeout(Duration.ofMillis(timeout))
-                .poolConfig(new GenericObjectPoolConfig())
-                .build();
-
         if ("sentinel".equalsIgnoreCase(redisMode) && sentinelMaster != null && sentinelNodes != null && !sentinelNodes.isEmpty()) {
-            return createSentinelConnectionFactory(poolConfig);
+            return createSentinelConnectionFactory();
         } else {
-            return createStandaloneConnectionFactory(poolConfig);
+            return createStandaloneConnectionFactory();
         }
     }
 
-    private LettuceConnectionFactory createStandaloneConnectionFactory(LettucePoolingClientConfiguration poolConfig) {
+    private LettuceConnectionFactory createStandaloneConnectionFactory() {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(redisHost, redisPort);
         if (redisPassword != null && !redisPassword.isEmpty()) {
             configuration.setPassword(RedisPassword.of(redisPassword));
         }
-        return new LettuceConnectionFactory(configuration, poolConfig);
+        return new LettuceConnectionFactory(configuration);
     }
 
-    private LettuceConnectionFactory createSentinelConnectionFactory(LettucePoolingClientConfiguration poolConfig) {
+    private LettuceConnectionFactory createSentinelConnectionFactory() {
         RedisSentinelConfiguration sentinelConfig = new RedisSentinelConfiguration();
         sentinelConfig.master(sentinelMaster);
 
@@ -100,16 +93,7 @@ public class RedisConfig {
             sentinelConfig.setPassword(RedisPassword.of(redisPassword));
         }
 
-        return new LettuceConnectionFactory(sentinelConfig, poolConfig);
-    }
-
-    private GenericObjectPoolConfig<?> getPoolConfig() {
-        GenericObjectPoolConfig<?> config = new GenericObjectPoolConfig<>();
-        config.setMaxTotal(maxActive);
-        config.setMaxIdle(maxIdle);
-        config.setMinIdle(minIdle);
-        config.setMaxWait(Duration.ofMillis(maxWait));
-        return config;
+        return new LettuceConnectionFactory(sentinelConfig);
     }
 
     @Bean
@@ -138,3 +122,4 @@ public class RedisConfig {
                 .build();
     }
 }
+

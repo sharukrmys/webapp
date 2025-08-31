@@ -14,19 +14,20 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: false
-  redis:
-    enabled: true
-    mode: sentinel
-    sentinel:
-      master: mymaster
-      nodes: prod-redis-sentinel-0:26379,prod-redis-sentinel-1:26379,prod-redis-sentinel-2:26379
-    password: ${REDIS_PASSWORD}
-    lettuce:
-      pool:
-        max-active: 16
-        max-idle: 16
-        min-idle: 8
-        max-wait: -1
+  data:
+    redis:
+      enabled: true
+      mode: sentinel
+      sentinel:
+        master: mymaster
+        nodes: prod-redis-sentinel-0:26379,prod-redis-sentinel-1:26379,prod-redis-sentinel-2:26379
+      password: ${REDIS_PASSWORD}
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 16
+          min-idle: 8
+          max-wait: -1
   kafka:
     enabled: true
     bootstrap-servers: prod-kafka-0:9092,prod-kafka-1:9092,prod-kafka-2:9092

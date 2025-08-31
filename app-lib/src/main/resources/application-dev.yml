@@ -8,11 +8,12 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
-  redis:
-    enabled: true
-    host: dev-redis
-    port: 6379
-    password: ${REDIS_PASSWORD}
+  data:
+    redis:
+      enabled: true
+      host: dev-redis
+      port: 6379
+      password: ${REDIS_PASSWORD}
   kafka:
     enabled: true
     bootstrap-servers: dev-kafka:9092

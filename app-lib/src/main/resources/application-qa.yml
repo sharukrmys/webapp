@@ -8,12 +8,14 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
-  redis:
-    enabled: true
-    sentinel:
-      master: mymaster
-      nodes: qa-redis-sentinel-0:26379,qa-redis-sentinel-1:26379,qa-redis-sentinel-2:26379
-    password: ${REDIS_PASSWORD}
+  data:
+    redis:
+      enabled: true
+      mode: sentinel
+      sentinel:
+        master: mymaster
+        nodes: qa-redis-sentinel-0:26379,qa-redis-sentinel-1:26379,qa-redis-sentinel-2:26379
+      password: ${REDIS_PASSWORD}
   kafka:
     enabled: true
     bootstrap-servers: qa-kafka-0:9092,qa-kafka-1:9092,qa-kafka-2:9092

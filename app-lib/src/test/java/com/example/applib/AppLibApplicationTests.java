@@ -1,12 +1,13 @@
 package com.example.applib;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(classes = ImportVerificationTest.class)
 @TestPropertySource(properties = {
-    "spring.redis.enabled=false",
+    "spring.data.redis.enabled=false",
     "spring.cloud.config.enabled=false",
     "spring.cloud.discovery.enabled=false",
     "spring.cloud.openfeign.enabled=false",
@@ -28,3 +29,4 @@ class AppLibApplicationTests {
         // This test verifies that the Spring context loads successfully
     }
 }
+
