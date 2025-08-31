@@ -6,10 +6,10 @@ import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 import javax.sql.DataSource;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
@@ -32,20 +32,17 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 )
 public class TenantDataSourceConfig {
 
-    private final ObjectMapper objectMapper;
-    
     @Autowired
+    private ObjectMapper objectMapper;
+    
+    @Autowired(required = false)
     private MasterTenantRepository masterTenantRepository;
-
-    public TenantDataSourceConfig(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     @Bean
     public LocalContainerEntityManagerFactoryBean tenantEntityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(tenantMasterDataSource());
-        em.setPackagesToScan("com.example.applib.tenant", "com.example.applib.model");
+        em.setPackagesToScan("com.example.applib.tenant");
 
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
@@ -149,6 +146,11 @@ public class TenantDataSourceConfig {
     @PostConstruct
     public void loadTenants() {
         log.info("Loading all tenants from the master database");
+        
+        if (masterTenantRepository == null) {
+            log.warn("MasterTenantRepository is not available. Skipping tenant loading.");
+            return;
+        }
         
         try {
             Iterable<MasterTenant> tenants = masterTenantRepository.findByIsActiveTrue();

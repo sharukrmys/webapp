@@ -3,19 +3,22 @@ package com.example.applib.tenant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TenantJdbcService {
 
-    @Qualifier("tenantMasterJdbcTemplate")
     private final JdbcTemplate masterJdbcTemplate;
+
+    @Autowired
+    public TenantJdbcService(@Qualifier("tenantMasterJdbcTemplate") JdbcTemplate masterJdbcTemplate) {
+        this.masterJdbcTemplate = masterJdbcTemplate;
+    }
 
     /**
      * Get a tenant by ID
