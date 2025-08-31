@@ -1,9 +1,7 @@
 plugins {
+    id 'org.springframework.boot' version '3.5.3' apply false
+    id 'io.spring.dependency-management' version '1.1.4' apply false
     id 'java'
-    id 'org.springframework.boot' version '3.5.3' // Updated to 3.5.3
-    id 'io.spring.dependency-management' version '1.1.7'
-    id 'com.diffplug.spotless' version '6.25.0'
-    id 'jacoco'
 }
 
 allprojects {
@@ -17,99 +15,25 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'com.diffplug.spotless'
-    apply plugin: 'jacoco'
     
     java {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = '21'
+    }
+    
+    dependencyManagement {
+        imports {
+            mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+        }
     }
     
     dependencies {
-        // Common dependencies for all subprojects
         implementation 'org.springframework.boot:spring-boot-starter'
-        implementation 'org.springframework.boot:spring-boot-starter-validation'
-        implementation 'org.springframework.boot:spring-boot-starter-actuator'
-        
-        // Lombok
-        compileOnly 'org.projectlombok:lombok'
-        annotationProcessor 'org.projectlombok:lombok'
-        
-        // Guava
-        implementation 'com.google.guava:guava:33.0.0-jre'
-        
-        // Nimbus JOSE JWT
-        implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
-        
-        // Apache POI
-        implementation 'org.apache.poi:poi:5.4.1'
-        implementation 'org.apache.poi:poi-ooxml:5.4.1'
-        
-        // DocX4j
-        implementation 'org.docx4j:docx4j-core:11.5.0'
-        implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.0'
-        
-        // Testing
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
     }
     
-    spotless {
-        java {
-            importOrder()
-            removeUnusedImports()
-            trimTrailingWhitespace()
-            indentWithSpaces(4)
-            endWithNewline()
-        }
-    }
-    
-    jacoco {
-        toolVersion = "0.8.11"
-    }
-    
-    jacocoTestReport {
-        reports {
-            xml.required = true
-            html.required = true
-        }
-    }
-    
-    test {
+    tasks.named('test') {
         useJUnitPlatform()
-        finalizedBy jacocoTestReport
     }
-    
-    // Disable bootJar for library modules
-    bootJar {
-        enabled = false
-    }
-    
-    jar {
-        enabled = true
-    }
-    
-    // Apply Spring Cloud dependencies to all subprojects
-    dependencyManagement {
-        imports {
-            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2025.0.0" // Updated to 2025.0.0
-        }
-    }
-}
-
-// Root project configuration
-bootJar {
-    enabled = false
-}
-
-jar {
-    enabled = true
-}
-
-// Configure Gradle wrapper task
-wrapper {
-    gradleVersion = '8.5' // Will update to 8.14 when available
-    distributionType = 'BIN'
 }
 
