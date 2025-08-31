@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,9 +25,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        basePackages = {"com.example.applib.tenant", "com.example.applib.repository"},
-        entityManagerFactoryRef = "masterEntityManagerFactory",
-        transactionManagerRef = "masterTransactionManager"
+        basePackages = {"com.example.applib.tenant"},
+        entityManagerFactoryRef = "tenantEntityManagerFactory",
+        transactionManagerRef = "tenantTransactionManager"
 )
 @RequiredArgsConstructor
 public class TenantDataSourceConfig {
@@ -37,10 +36,9 @@ public class TenantDataSourceConfig {
     private final ObjectMapper objectMapper;
 
     @Bean
-    @Primary
-    public LocalContainerEntityManagerFactoryBean masterEntityManagerFactory() {
+    public LocalContainerEntityManagerFactoryBean tenantEntityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-        em.setDataSource(masterDataSource());
+        em.setDataSource(tenantMasterDataSource());
         em.setPackagesToScan("com.example.applib.tenant", "com.example.applib.model");
 
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
@@ -58,8 +56,7 @@ public class TenantDataSourceConfig {
     }
 
     @Bean
-    @Primary
-    public DataSource masterDataSource() {
+    public DataSource tenantMasterDataSource() {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName("org.postgresql.Driver");
         dataSource.setJdbcUrl("jdbc:postgresql://localhost:5432/master_db");
@@ -74,16 +71,14 @@ public class TenantDataSourceConfig {
     }
 
     @Bean
-    @Primary
-    public JdbcTemplate masterJdbcTemplate(@Qualifier("masterDataSource") DataSource dataSource) {
+    public JdbcTemplate tenantMasterJdbcTemplate(@Qualifier("tenantMasterDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
     @Bean
-    @Primary
-    public PlatformTransactionManager masterTransactionManager() {
+    public PlatformTransactionManager tenantTransactionManager() {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(masterEntityManagerFactory().getObject());
+        transactionManager.setEntityManagerFactory(tenantEntityManagerFactory().getObject());
         return transactionManager;
     }
 
@@ -95,7 +90,7 @@ public class TenantDataSourceConfig {
     @Bean
     public TenantRoutingDataSource tenantRoutingDataSource() {
         TenantRoutingDataSource dataSource = new TenantRoutingDataSource();
-        dataSource.setDefaultTargetDataSource(masterDataSource());
+        dataSource.setDefaultTargetDataSource(tenantMasterDataSource());
         dataSource.setTargetDataSources(new HashMap<>());
         return dataSource;
     }
@@ -220,3 +215,4 @@ public class TenantDataSourceConfig {
         }
     }
 }
+
