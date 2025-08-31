@@ -1,19 +1,10 @@
 package com.example.applib;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(classes = ImportVerificationTest.class)
-@EnableAutoConfiguration(exclude = {
-    DataSourceAutoConfiguration.class,
-    DataSourceTransactionManagerAutoConfiguration.class,
-    HibernateJpaAutoConfiguration.class
-})
 @TestPropertySource(properties = {
     "spring.redis.enabled=false",
     "spring.cloud.config.enabled=false",
@@ -22,7 +13,13 @@ import org.springframework.test.context.TestPropertySource;
     "aws.enabled=false",
     "aws.s3.enabled=false",
     "aws.sqs.enabled=false",
-    "aws.secretsmanager.enabled=false"
+    "aws.secretsmanager.enabled=false",
+    "spring.datasource.url=jdbc:postgresql://localhost:5432/testdb",
+    "spring.datasource.driver-class-name=org.postgresql.Driver",
+    "spring.datasource.username=postgres",
+    "spring.datasource.password=postgres",
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect"
 })
 class AppLibApplicationTests {
 
