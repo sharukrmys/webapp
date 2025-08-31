@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,11 +30,16 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         entityManagerFactoryRef = "tenantEntityManagerFactory",
         transactionManagerRef = "tenantTransactionManager"
 )
-@RequiredArgsConstructor
 public class TenantDataSourceConfig {
 
-    private final MasterTenantRepository masterTenantRepository;
     private final ObjectMapper objectMapper;
+    
+    @Autowired
+    private MasterTenantRepository masterTenantRepository;
+
+    public TenantDataSourceConfig(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Bean
     public LocalContainerEntityManagerFactoryBean tenantEntityManagerFactory() {
@@ -143,25 +149,30 @@ public class TenantDataSourceConfig {
     @PostConstruct
     public void loadTenants() {
         log.info("Loading all tenants from the master database");
+        
+        try {
+            Iterable<MasterTenant> tenants = masterTenantRepository.findByIsActiveTrue();
+            Map<Object, Object> tenantDataSources = new HashMap<>();
 
-        Iterable<MasterTenant> tenants = masterTenantRepository.findByIsActiveTrue();
-        Map<Object, Object> tenantDataSources = new HashMap<>();
-
-        for (MasterTenant tenant : tenants) {
-            try {
-                DataSource dataSource = createDataSource(tenant);
-                tenantDataSources.put(tenant.getTenantId(), dataSource);
-                log.info("Loaded tenant: {}", tenant.getTenantId());
-            } catch (Exception e) {
-                log.error("Error loading tenant: {}", tenant.getTenantId(), e);
+            for (MasterTenant tenant : tenants) {
+                try {
+                    DataSource dataSource = createDataSource(tenant);
+                    tenantDataSources.put(tenant.getTenantId(), dataSource);
+                    log.info("Loaded tenant: {}", tenant.getTenantId());
+                } catch (Exception e) {
+                    log.error("Error loading tenant: {}", tenant.getTenantId(), e);
+                }
             }
+
+            TenantRoutingDataSource tenantRoutingDataSource = tenantRoutingDataSource();
+            tenantRoutingDataSource.setTargetDataSources(tenantDataSources);
+            tenantRoutingDataSource.afterPropertiesSet();
+
+            log.info("Loaded {} active tenants", tenantDataSources.size());
+        } catch (Exception e) {
+            log.error("Error loading tenants", e);
+            log.info("Will continue without loading tenants. They will be loaded on demand.");
         }
-
-        TenantRoutingDataSource tenantRoutingDataSource = tenantRoutingDataSource();
-        tenantRoutingDataSource.setTargetDataSources(tenantDataSources);
-        tenantRoutingDataSource.afterPropertiesSet();
-
-        log.info("Loaded {} active tenants", tenantDataSources.size());
     }
 
     private DataSource createDataSource(MasterTenant tenant) {
