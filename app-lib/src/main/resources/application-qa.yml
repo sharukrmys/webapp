@@ -1,36 +1,27 @@
 spring:
   datasource:
-    master:
-      url: jdbc:postgresql://qa-postgres:5432/master_db
-      username: ${DB_USERNAME}
-      password: ${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-  data:
-    redis:
-      enabled: true
-      mode: sentinel
-      sentinel:
-        master: mymaster
-        nodes: qa-redis-sentinel-0:26379,qa-redis-sentinel-1:26379,qa-redis-sentinel-2:26379
-      password: ${REDIS_PASSWORD}
-  kafka:
-    enabled: true
-    bootstrap-servers: qa-kafka-0:9092,qa-kafka-1:9092,qa-kafka-2:9092
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://qa-db-host:5432/master_db
+    username: postgres
+    password: postgres
 
+# QA environment specific settings
 aws:
-  region: ${AWS_REGION:us-east-1}
-  s3:
-    enabled: true
+  enabled: true
+  region: us-east-1
   sqs:
+    enabled: true
+  s3:
     enabled: true
   secretsmanager:
     enabled: true
-
-logging:
-  level:
-    com.example: INFO
-    org.springframework: INFO
+  
+redis:
+  enabled: true
+  host: qa-redis-host
+  port: 6379
+  
+kafka:
+  enabled: true
+  bootstrap-servers: qa-kafka-host:9092
 

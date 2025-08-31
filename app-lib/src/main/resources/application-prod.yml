@@ -1,63 +1,27 @@
 spring:
   datasource:
-    master:
-      url: jdbc:postgresql://prod-postgres:5432/master_db
-      username: ${DB_USERNAME}
-      password: ${DB_PASSWORD}
-      hikari:
-        connection-timeout: 30000
-        idle-timeout: 600000
-        max-lifetime: 1800000
-        maximum-pool-size: 20
-        minimum-idle: 10
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
-  data:
-    redis:
-      enabled: true
-      mode: sentinel
-      sentinel:
-        master: mymaster
-        nodes: prod-redis-sentinel-0:26379,prod-redis-sentinel-1:26379,prod-redis-sentinel-2:26379
-      password: ${REDIS_PASSWORD}
-      lettuce:
-        pool:
-          max-active: 16
-          max-idle: 16
-          min-idle: 8
-          max-wait: -1
-  kafka:
-    enabled: true
-    bootstrap-servers: prod-kafka-0:9092,prod-kafka-1:9092,prod-kafka-2:9092
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://prod-db-host:5432/master_db
+    username: postgres
+    password: postgres
 
+# Production environment specific settings
 aws:
-  region: ${AWS_REGION:us-east-1}
-  use-instance-profile: true
-  s3:
-    enabled: true
+  enabled: true
+  region: us-east-1
   sqs:
-    enabled: true
-  secretsmanager:
-    enabled: true
-
-# Feature toggles for production (all enabled by default)
-features:
-  kafka:
-    enabled: true
-  redis:
     enabled: true
   s3:
     enabled: true
-  sqs:
-    enabled: true
   secretsmanager:
     enabled: true
-
-logging:
-  level:
-    root: WARN
-    com.example: INFO
-    org.springframework: WARN
+  
+redis:
+  enabled: true
+  host: prod-redis-host
+  port: 6379
+  
+kafka:
+  enabled: true
+  bootstrap-servers: prod-kafka-host:9092
 

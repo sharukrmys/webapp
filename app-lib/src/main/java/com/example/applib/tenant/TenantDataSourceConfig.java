@@ -9,6 +9,7 @@ import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,18 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         transactionManagerRef = "tenantTransactionManager"
 )
 public class TenantDataSourceConfig {
+
+    @Value("${spring.datasource.url}")
+    private String datasourceUrl;
+
+    @Value("${spring.datasource.username}")
+    private String datasourceUsername;
+
+    @Value("${spring.datasource.password}")
+    private String datasourcePassword;
+
+    @Value("${spring.datasource.driver-class-name}")
+    private String driverClassName;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -61,10 +74,10 @@ public class TenantDataSourceConfig {
     @Bean
     public DataSource tenantMasterDataSource() {
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setDriverClassName("org.postgresql.Driver");
-        dataSource.setJdbcUrl("jdbc:postgresql://localhost:5432/master_db");
-        dataSource.setUsername("postgres");
-        dataSource.setPassword("postgres");
+        dataSource.setDriverClassName(driverClassName);
+        dataSource.setJdbcUrl(datasourceUrl);
+        dataSource.setUsername(datasourceUsername);
+        dataSource.setPassword(datasourcePassword);
         dataSource.setConnectionTimeout(30000);
         dataSource.setIdleTimeout(600000);
         dataSource.setMaxLifetime(1800000);
@@ -180,7 +193,7 @@ public class TenantDataSourceConfig {
     private DataSource createDataSource(MasterTenant tenant) {
         try {
             HikariDataSource dataSource = new HikariDataSource();
-            dataSource.setDriverClassName("org.postgresql.Driver");
+            dataSource.setDriverClassName(driverClassName);
             dataSource.setJdbcUrl(tenant.getUrl());
             dataSource.setUsername(tenant.getUsername());
             dataSource.setPassword(tenant.getPassword());

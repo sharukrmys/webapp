@@ -1,34 +1,27 @@
 spring:
   datasource:
-    master:
-      url: jdbc:postgresql://dev-postgres:5432/master_db
-      username: ${DB_USERNAME}
-      password: ${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-  data:
-    redis:
-      enabled: true
-      host: dev-redis
-      port: 6379
-      password: ${REDIS_PASSWORD}
-  kafka:
-    enabled: true
-    bootstrap-servers: dev-kafka:9092
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://dev-db-host:5432/master_db
+    username: postgres
+    password: postgres
 
+# Development environment specific settings
 aws:
-  region: ${AWS_REGION:us-east-1}
-  s3:
-    enabled: true
+  enabled: true
+  region: us-east-1
   sqs:
+    enabled: true
+  s3:
     enabled: true
   secretsmanager:
     enabled: true
-
-logging:
-  level:
-    com.example: DEBUG
-    org.springframework: INFO
+  
+redis:
+  enabled: true
+  host: dev-redis-host
+  port: 6379
+  
+kafka:
+  enabled: true
+  bootstrap-servers: dev-kafka-host:9092
 

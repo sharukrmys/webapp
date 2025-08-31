@@ -1,88 +1,17 @@
 spring:
   datasource:
-    master:
-      url: jdbc:postgresql://localhost:5432/master_db
-      username: ${DB_USERNAME:postgres}
-      password: ${DB_PASSWORD:postgres}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-  data:
-    redis:
-      enabled: ${FEATURE_REDIS_ENABLED:false}
-      mode: standalone
-      host: localhost
-      port: 6379
-      lock:
-        wait-time: 10
-        lease-time: 30
-  kafka:
-    enabled: ${FEATURE_KAFKA_ENABLED:false}
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/master_db
+    username: postgres
+    password: postgres
 
-# Actuator configuration
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,env,beans,mappings
-  endpoint:
-    health:
-      show-details: always
-  info:
-    env:
-      enabled: true
-
-# OpenAPI/Swagger configuration
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operationsSorter: method
-    tagsSorter: alpha
-    display-request-duration: true
-  show-actuator: true
-
+# Local environment specific settings
 aws:
-  region: ${AWS_REGION:us-east-1}
-  use-instance-profile: false
-  s3:
-    enabled: ${FEATURE_S3_ENABLED:false}
-  sqs:
-    enabled: ${FEATURE_SQS_ENABLED:false}
-  secretsmanager:
-    enabled: ${FEATURE_SECRETSMANAGER_ENABLED:false}
-
-# Feature toggles for local development
-features:
-  kafka:
-    enabled: ${FEATURE_KAFKA_ENABLED:false}
-  redis:
-    enabled: ${FEATURE_REDIS_ENABLED:false}
-  s3:
-    enabled: ${FEATURE_S3_ENABLED:false}
-  sqs:
-    enabled: ${FEATURE_SQS_ENABLED:false}
-  secretsmanager:
-    enabled: ${FEATURE_SECRETSMANAGER_ENABLED:false}
-
-minio:
-  enabled: ${MINIO_ENABLED:true}
-  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
-  access-key: ${MINIO_ACCESS_KEY:minioadmin}
-  secret-key: ${MINIO_SECRET_KEY:minioadmin}
-  bucket-name: main-bucket
-  schema-bucket-name: schema-bucket
-  image-bucket-name: image-bucket
-  flex-bucket-name: flex-bucket
-  company-profile-bucket-name: profile-bucket
-  data-management-bucket-name: data-bucket
-
-logging:
-  level:
-    com.example: DEBUG
-    org.springframework: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  enabled: false
+  
+redis:
+  enabled: false
+  
+kafka:
+  enabled: false
 

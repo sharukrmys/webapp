@@ -1,17 +1,68 @@
 spring:
-  application:
-    name: app-lib
-  cloud:
-    openfeign:
-      client:
-        config:
-          default:
-            connectTimeout: 5000
-            readTimeout: 5000
-            loggerLevel: full
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/master_db
+    username: postgres
+    password: postgres
+    hikari:
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      maximum-pool-size: 10
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
 
+# Common configuration for all environments
 logging:
   level:
-    com.example: DEBUG
     org.springframework: INFO
+    com.example: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# AWS configuration (disabled in local mode)
+aws:
+  enabled: false
+  region: us-east-1
+  sqs:
+    enabled: false
+    endpoint: http://localhost:4566
+  s3:
+    enabled: false
+    endpoint: http://localhost:4566
+  secretsmanager:
+    enabled: false
+    endpoint: http://localhost:4566
+
+# Redis configuration (disabled in local mode)
+redis:
+  enabled: false
+  host: localhost
+  port: 6379
+  password:
+  timeout: 2000
+  cache:
+    enabled: false
+  queue:
+    enabled: false
+  pubsub:
+    enabled: false
+
+# Kafka configuration (disabled in local mode)
+kafka:
+  enabled: false
+  bootstrap-servers: localhost:9092
+  consumer:
+    group-id: metadata-group
+    auto-offset-reset: earliest
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
