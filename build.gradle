@@ -1,6 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.3' apply false
-    id 'io.spring.dependency-management' version '1.1.7' apply false
+    id 'org.springframework.boot' version "${springBootVersion}" apply false
+    id 'io.spring.dependency-management' version "${dependencyManagementVersion}" apply false
     id 'java'
 }
 
@@ -18,11 +18,8 @@ subprojects {
     apply plugin: 'io.spring.dependency-management'
     
     java {
-        sourceCompatibility = '21'
-        targetCompatibility = '21'
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
-        }
+        sourceCompatibility = JavaVersion.toVersion(javaVersion)
+        targetCompatibility = JavaVersion.toVersion(javaVersion)
     }
     
     dependencyManagement {
