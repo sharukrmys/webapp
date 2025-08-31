@@ -32,8 +32,11 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 )
 public class TenantDataSourceConfig {
 
-    @Value("${spring.datasource.driver-class-name:org.postgresql.Driver}")
+    @Value("${spring.datasource.driver-class-name:org.h2.Driver}")
     private String driverClassName;
+
+    @Value("${spring.jpa.properties.hibernate.dialect:org.hibernate.dialect.H2Dialect}")
+    private String hibernateDialect;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -56,7 +59,7 @@ public class TenantDataSourceConfig {
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("hibernate.hbm2ddl.auto", "update");
-        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+        properties.put("hibernate.dialect", hibernateDialect);
         properties.put("hibernate.show_sql", "true");
         properties.put("hibernate.format_sql", "true");
 

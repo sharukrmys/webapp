@@ -1,5 +1,53 @@
 plugins {
     id 'java-library'
+    id 'org.springframework.boot' version '3.5.4' apply false
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '21'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    }
+}
+
+dependencies {
+    // Spring Boot
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+    
+    // AWS
+    api 'io.awspring.cloud:spring-cloud-aws-starter-sqs:3.1.0'
+    api 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.1.0'
+    api 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager:3.1.0'
+    
+    // Redis
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // Database
+    api 'org.postgresql:postgresql'
+    api 'com.h2database:h2'
+    
+    // Utilities
+    api 'com.google.guava:guava:32.1.3-jre'
+    api 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+    api 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 bootJar {
@@ -8,69 +56,5 @@ bootJar {
 
 jar {
     enabled = true
-}
-
-dependencies {
-    // Spring Boot
-    api 'org.springframework.boot:spring-boot-starter'
-    api 'org.springframework.boot:spring-boot-starter-web'
-    api 'org.springframework.boot:spring-boot-starter-validation'
-    api 'org.springframework.boot:spring-boot-starter-actuator'
-    api 'org.springframework.boot:spring-boot-starter-data-jpa'
-    api 'org.springframework.boot:spring-boot-starter-data-redis'
-    
-    // Spring Cloud
-    api 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    
-    // Spring Kafka
-    api 'org.springframework.kafka:spring-kafka'
-    
-    // AWS SDK
-    api 'software.amazon.awssdk:s3:2.25.12'
-    api 'software.amazon.awssdk:sqs:2.25.12'
-    api 'software.amazon.awssdk:secretsmanager:2.25.12'
-    api 'software.amazon.awssdk:athena:2.25.12'
-    
-    // Minio
-    api 'io.minio:minio:8.5.9'
-    
-    // Database
-    api 'org.postgresql:postgresql'
-    api 'com.zaxxer:HikariCP'
-    
-    // Redis
-    api 'org.redisson:redisson-spring-boot-starter:3.27.2'
-    api 'org.apache.commons:commons-pool2:2.12.0'
-    
-    // Guava
-    api 'com.google.guava:guava'
-    
-    // Gson
-    api 'com.google.code.gson:gson:2.10.1'
-    
-    // Nimbus JOSE JWT
-    api 'com.nimbusds:nimbus-jose-jwt'
-    
-    // Apache Commons
-    api 'org.apache.commons:commons-lang3:3.14.0'
-    api 'commons-io:commons-io:2.15.1'
-    
-    // Jackson
-    api 'com.fasterxml.jackson.core:jackson-databind'
-    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    
-    // OpenAPI/Swagger
-    api 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0'
-    
-    // Feign
-    api 'io.github.openfeign:feign-okhttp:13.2.1'
-    
-    // Lombok
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    
-    // Testing
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.postgresql:postgresql'
 }
 

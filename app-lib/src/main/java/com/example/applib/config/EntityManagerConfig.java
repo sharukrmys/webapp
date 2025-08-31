@@ -2,6 +2,7 @@ package com.example.applib.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,9 @@ import java.util.Map;
 @EntityScan(basePackages = {"com.example.applib.entity"})
 public class EntityManagerConfig {
 
+    @Value("${spring.jpa.properties.hibernate.dialect:org.hibernate.dialect.H2Dialect}")
+    private String hibernateDialect;
+
     @Autowired
     @Qualifier("primaryDataSource")
     private DataSource dataSource;
@@ -39,7 +43,7 @@ public class EntityManagerConfig {
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("hibernate.hbm2ddl.auto", "update");
-        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+        properties.put("hibernate.dialect", hibernateDialect);
         properties.put("hibernate.show_sql", "true");
         properties.put("hibernate.format_sql", "true");
 

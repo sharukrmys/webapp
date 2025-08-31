@@ -15,16 +15,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @Configuration
 public class DataSourceConfig {
 
-    @Value("${spring.datasource.url:jdbc:postgresql://localhost:5432/master_db}")
+    @Value("${spring.datasource.url:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}")
     private String url;
 
-    @Value("${spring.datasource.username:postgres}")
+    @Value("${spring.datasource.username:sa}")
     private String username;
 
-    @Value("${spring.datasource.password:postgres}")
+    @Value("${spring.datasource.password:password}")
     private String password;
 
-    @Value("${spring.datasource.driver-class-name:org.postgresql.Driver}")
+    @Value("${spring.datasource.driver-class-name:org.h2.Driver}")
     private String driverClassName;
 
     @Bean(name = "primaryDataSource")
