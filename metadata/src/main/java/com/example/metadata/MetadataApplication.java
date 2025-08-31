@@ -14,12 +14,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     "com.example.applib.tenant"
 })
 @EntityScan(basePackages = {
-    "com.example.metadata", 
+    "com.example.metadata.entity", 
     "com.example.applib.entity", 
     "com.example.applib.tenant"
 })
 @EnableJpaRepositories(basePackages = {
-    "com.example.metadata", 
+    "com.example.metadata.repository", 
     "com.example.applib.repository", 
     "com.example.applib.tenant"
 })

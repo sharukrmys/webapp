@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
@@ -33,16 +32,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 )
 public class TenantDataSourceConfig {
 
-    @Value("${spring.datasource.url}")
-    private String datasourceUrl;
-
-    @Value("${spring.datasource.username}")
-    private String datasourceUsername;
-
-    @Value("${spring.datasource.password}")
-    private String datasourcePassword;
-
-    @Value("${spring.datasource.driver-class-name}")
+    @Value("${spring.datasource.driver-class-name:org.postgresql.Driver}")
     private String driverClassName;
 
     @Autowired
@@ -51,10 +41,14 @@ public class TenantDataSourceConfig {
     @Autowired(required = false)
     private MasterTenantRepository masterTenantRepository;
 
+    @Autowired
+    @Qualifier("primaryDataSource")
+    private DataSource primaryDataSource;
+
     @Bean
     public LocalContainerEntityManagerFactoryBean tenantEntityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-        em.setDataSource(tenantMasterDataSource());
+        em.setDataSource(primaryDataSource);
         em.setPackagesToScan("com.example.applib.tenant");
 
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
@@ -72,23 +66,8 @@ public class TenantDataSourceConfig {
     }
 
     @Bean
-    public DataSource tenantMasterDataSource() {
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setDriverClassName(driverClassName);
-        dataSource.setJdbcUrl(datasourceUrl);
-        dataSource.setUsername(datasourceUsername);
-        dataSource.setPassword(datasourcePassword);
-        dataSource.setConnectionTimeout(30000);
-        dataSource.setIdleTimeout(600000);
-        dataSource.setMaxLifetime(1800000);
-        dataSource.setMaximumPoolSize(10);
-        dataSource.setMinimumIdle(5);
-        return dataSource;
-    }
-
-    @Bean
-    public JdbcTemplate tenantMasterJdbcTemplate(@Qualifier("tenantMasterDataSource") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
+    public JdbcTemplate tenantMasterJdbcTemplate() {
+        return new JdbcTemplate(primaryDataSource);
     }
 
     @Bean
@@ -106,7 +85,7 @@ public class TenantDataSourceConfig {
     @Bean
     public TenantRoutingDataSource tenantRoutingDataSource() {
         TenantRoutingDataSource dataSource = new TenantRoutingDataSource();
-        dataSource.setDefaultTargetDataSource(tenantMasterDataSource());
+        dataSource.setDefaultTargetDataSource(primaryDataSource);
         dataSource.setTargetDataSources(new HashMap<>());
         return dataSource;
     }

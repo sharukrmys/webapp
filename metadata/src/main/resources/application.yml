@@ -10,6 +10,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/master_db
     username: postgres
     password: postgres
+    type: com.zaxxer.hikari.HikariDataSource
     hikari:
       connection-timeout: 30000
       idle-timeout: 600000

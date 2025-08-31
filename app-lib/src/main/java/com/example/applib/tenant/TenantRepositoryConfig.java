@@ -12,8 +12,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EntityScan(basePackages = "com.example.applib.tenant")
 @EnableJpaRepositories(
     basePackages = "com.example.applib.tenant",
-    entityManagerFactoryRef = "entityManagerFactory",
-    transactionManagerRef = "transactionManager"
+    entityManagerFactoryRef = "tenantEntityManagerFactory",
+    transactionManagerRef = "tenantTransactionManager"
 )
 public class TenantRepositoryConfig {
     // Configuration class to enable JPA repositories for tenant package
