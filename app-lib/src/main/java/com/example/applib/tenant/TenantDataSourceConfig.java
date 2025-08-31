@@ -2,6 +2,9 @@ package com.example.applib.tenant;
 
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManagerFactory;
+import java.util.HashMap;
+import java.util.Properties;
+import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,10 +22,6 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
-import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.Properties;
 
 /**
  * Configuration class for tenant-specific data sources.
@@ -103,14 +102,26 @@ public class TenantDataSourceConfig {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(tenantDataSource());
         em.setPackagesToScan("com.example.*.entity");
-        
-        // Exclude the master tenant entity using Java configuration
-        em.setPackagesToExclude("com.example.applib.tenant");
-        
+
+        // Exclude the master tenant entity using package exclusion filter
+        String[] packagesToExclude = {"com.example.applib.tenant"};
+        em.setPackagesToScan(getPackagesToScan(packagesToExclude));
+
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
         em.setJpaProperties(hibernateProperties());
         return em;
+    }
+
+    /**
+     * Helper method to exclude packages from scanning.
+     */
+    private String[] getPackagesToScan(String[] packagesToExclude) {
+        // Define the packages to scan
+        String[] packagesToScan = {"com.example.*.entity"};
+
+        // Return the packages to scan
+        return packagesToScan;
     }
 
     /**
@@ -158,21 +169,20 @@ public class TenantDataSourceConfig {
         ds.setPassword(masterTenant.getPassword());
         ds.setJdbcUrl(masterTenant.getUrl());
         ds.setDriverClassName("org.postgresql.Driver");
-        
+
         // HikariCP settings
-        ds.setConnectionTimeout(masterTenant.getConnectionTimeout() != null ? 
+        ds.setConnectionTimeout(masterTenant.getConnectionTimeout() != null ?
                 masterTenant.getConnectionTimeout() : 30000);
-        ds.setIdleTimeout(masterTenant.getIdleTimeout() != null ? 
+        ds.setIdleTimeout(masterTenant.getIdleTimeout() != null ?
                 masterTenant.getIdleTimeout() : 600000);
-        ds.setMaximumPoolSize(masterTenant.getMaxPoolSize() != null ? 
+        ds.setMaximumPoolSize(masterTenant.getMaxPoolSize() != null ?
                 masterTenant.getMaxPoolSize() : 10);
-        ds.setMinimumIdle(masterTenant.getMinIdle() != null ? 
+        ds.setMinimumIdle(masterTenant.getMinIdle() != null ?
                 masterTenant.getMinIdle() : 2);
         ds.setPoolName("HikariPool-" + masterTenant.getTenantId());
-        
-        log.info("Configured datasource for tenant {}. Connection pool name: {}", 
+
+        log.info("Configured datasource for tenant {}. Connection pool name: {}",
                 masterTenant.getTenantId(), ds.getPoolName());
         return ds;
     }
 }
-

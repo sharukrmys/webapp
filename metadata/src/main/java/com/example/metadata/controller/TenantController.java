@@ -1,105 +1,104 @@
 package com.example.metadata.controller;
 
 import com.example.applib.tenant.MasterTenant;
-import com.example.applib.tenant.TenantContext;
+import com.example.applib.tenant.MasterTenantRepository;
 import com.example.applib.tenant.TenantJdbcService;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controller for tenant operations.
+ */
 @Slf4j
 @RestController
-@RequestMapping("/api/tenants")
 @RequiredArgsConstructor
+@RequestMapping("/tenants")
 public class TenantController {
 
+    private final MasterTenantRepository masterTenantRepository;
     private final TenantJdbcService tenantJdbcService;
-    private final JdbcTemplate masterJdbcTemplate;
-    private final JdbcTemplate tenantJdbcTemplate;
-    private final JdbcTemplate flexJdbcTemplate;
-    private final JdbcTemplate tacJdbcTemplate;
 
+    /**
+     * Gets all tenants.
+     */
     @GetMapping
     public ResponseEntity<List<MasterTenant>> getAllTenants() {
-        List<MasterTenant> tenants = tenantJdbcService.getAllActiveTenants();
+        List<MasterTenant> tenants = masterTenantRepository.findAll();
         return ResponseEntity.ok(tenants);
     }
 
+    /**
+     * Gets a tenant by ID.
+     */
     @GetMapping("/{tenantId}")
     public ResponseEntity<MasterTenant> getTenantById(@PathVariable String tenantId) {
-        Optional<MasterTenant> tenant = tenantJdbcService.getTenantById(tenantId);
+        Optional<MasterTenant> tenant = masterTenantRepository.findByTenantId(tenantId);
         return tenant.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /**
+     * Creates a new tenant.
+     */
     @PostMapping
-    public ResponseEntity<String> createTenant(@RequestBody MasterTenant tenant) {
-        boolean success = tenantJdbcService.createTenant(tenant);
-        return success
-                ? ResponseEntity.ok("Tenant created successfully")
-                : ResponseEntity.badRequest().body("Failed to create tenant");
+    public ResponseEntity<MasterTenant> createTenant(@RequestBody MasterTenant tenant) {
+        if (masterTenantRepository.existsByTenantId(tenant.getTenantId())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        MasterTenant savedTenant = masterTenantRepository.save(tenant);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedTenant);
     }
 
+    /**
+     * Updates a tenant.
+     */
     @PutMapping("/{tenantId}")
-    public ResponseEntity<String> updateTenant(@PathVariable String tenantId, @RequestBody MasterTenant tenant) {
-        tenant.setTenantId(tenantId);
-        boolean success = tenantJdbcService.updateTenant(tenant);
-        return success
-                ? ResponseEntity.ok("Tenant updated successfully")
-                : ResponseEntity.badRequest().body("Failed to update tenant");
+    public ResponseEntity<MasterTenant> updateTenant(@PathVariable String tenantId, @RequestBody MasterTenant tenant) {
+        Optional<MasterTenant> existingTenant = masterTenantRepository.findByTenantId(tenantId);
+        if (existingTenant.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Update the existing tenant
+        MasterTenant tenantToUpdate = existingTenant.get();
+        tenantToUpdate.setUrl(tenant.getUrl());
+        tenantToUpdate.setUsername(tenant.getUsername());
+        tenantToUpdate.setPassword(tenant.getPassword());
+        tenantToUpdate.setDialect(tenant.getDialect());
+        tenantToUpdate.setIsactive(tenant.isActive());
+        tenantToUpdate.setConnectionTimeout(tenant.getConnectionTimeout());
+        tenantToUpdate.setIdleTimeout(tenant.getIdleTimeout());
+        tenantToUpdate.setMaxPoolSize(tenant.getMaxPoolSize());
+        tenantToUpdate.setMinIdle(tenant.getMinIdle());
+
+        MasterTenant updatedTenant = masterTenantRepository.save(tenantToUpdate);
+        return ResponseEntity.ok(updatedTenant);
     }
 
-    @GetMapping("/current")
-    public ResponseEntity<String> getCurrentTenant() {
-        String tenantId = TenantContext.getTenantId();
-        return ResponseEntity.ok("Current tenant: " + tenantId);
-    }
-
-    @GetMapping("/{tenantId}/query")
-    public ResponseEntity<List<Map<String, Object>>> executeQuery(
-            @PathVariable String tenantId,
-            @RequestParam String sql) {
-        List<Map<String, Object>> results = tenantJdbcService.executeQuery(tenantId, sql);
-        return ResponseEntity.ok(results);
-    }
-
-    @GetMapping("/test-connections")
-    public ResponseEntity<Map<String, Object>> testConnections() {
-        // Set a tenant ID for testing
-        TenantContext.setTenantId("test-tenant");
-
+    /**
+     * Executes a SQL query for a specific tenant.
+     */
+    @PostMapping("/{tenantId}/query")
+    public ResponseEntity<List<Map<String, Object>>> executeQuery(@PathVariable String tenantId, @RequestBody String sql) {
         try {
-            // Test master connection
-            int masterCount = masterJdbcTemplate.queryForObject("SELECT COUNT(*) FROM master_tenant", Integer.class);
-
-            // Test tenant connection
-            int tenantCount = tenantJdbcTemplate.queryForObject("SELECT 1", Integer.class);
-
-            // Test flex connection
-            int flexCount = flexJdbcTemplate.queryForObject("SELECT 1", Integer.class);
-
-            // Test tac connection
-            int tacCount = tacJdbcTemplate.queryForObject("SELECT 1", Integer.class);
-
-            Map<String, Object> results = Map.of(
-                    "masterConnection", "Success: " + masterCount + " tenants found",
-                    "tenantConnection", "Success: " + tenantCount,
-                    "flexConnection", "Success: " + flexCount,
-                    "tacConnection", "Success: " + tacCount
-            );
-
+            List<Map<String, Object>> results = tenantJdbcService.queryForList(tenantId, sql);
             return ResponseEntity.ok(results);
         } catch (Exception e) {
-            log.error("Error testing connections", e);
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-        } finally {
-            TenantContext.clear();
+            log.error("Error executing query for tenant {}: {}", tenantId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }
-

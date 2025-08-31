@@ -1,5 +1,7 @@
 package com.example.applib.config;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -14,9 +16,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Configuration class for Redis.
@@ -36,9 +35,9 @@ public class RedisConfig {
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
-        String redisUrl = String.format("redis://%s:%d", 
+        String redisUrl = String.format("redis://%s:%d",
                 redisProperties.getHost(), redisProperties.getPort());
-        
+
         if (redisProperties.getPassword() != null && !redisProperties.getPassword().isEmpty()) {
             config.useSingleServer()
                     .setAddress(redisUrl)
@@ -46,7 +45,7 @@ public class RedisConfig {
         } else {
             config.useSingleServer().setAddress(redisUrl);
         }
-        
+
         log.info("Configuring Redis connection to {}", redisUrl);
         return Redisson.create(config);
     }
@@ -93,4 +92,3 @@ public class RedisConfig {
         return container;
     }
 }
-

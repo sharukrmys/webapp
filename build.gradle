@@ -23,10 +23,10 @@ subprojects {
     apply plugin: 'jacoco'
     
     java {
-        // Set source compatibility to Java 17 for local development
-        // but target compatibility to Java 21 for production
+        // Use Java 17 for both source and target compatibility for now
+        // We can update to Java 21 when the environment supports it
         sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.toVersion(javaVersion)
+        targetCompatibility = JavaVersion.VERSION_17
     }
     
     dependencies {
@@ -94,6 +94,9 @@ subprojects {
 }
 
 // Root project configuration
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+
 bootJar {
     enabled = false
 }

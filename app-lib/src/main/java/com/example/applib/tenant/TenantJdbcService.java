@@ -1,5 +1,7 @@
 package com.example.applib.tenant;
 
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -7,9 +9,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Service for executing JDBC operations in a tenant-specific context.
@@ -180,7 +179,7 @@ public class TenantJdbcService {
      * @param paramMap The named parameters to bind to the query
      * @return A list of maps representing the result set
      */
-    public List<Map<String, Object>> queryForList(String tenantId, String sql, Map<String, Object> paramMap) {
+    public List<Map<String, Object>> queryForListWithNamedParams(String tenantId, String sql, Map<String, Object> paramMap) {
         try {
             NamedParameterJdbcTemplate namedTemplate = getNamedParameterJdbcTemplate(tenantId);
             return namedTemplate.queryForList(sql, paramMap);
@@ -200,7 +199,7 @@ public class TenantJdbcService {
      * @param paramMap The named parameters to bind to the update statement
      * @return The number of rows affected
      */
-    public int update(String tenantId, String sql, Map<String, Object> paramMap) {
+    public int updateWithNamedParams(String tenantId, String sql, Map<String, Object> paramMap) {
         try {
             NamedParameterJdbcTemplate namedTemplate = getNamedParameterJdbcTemplate(tenantId);
             return namedTemplate.update(sql, paramMap);
@@ -220,7 +219,7 @@ public class TenantJdbcService {
      * @param batchValues The named parameters for each batch
      * @return An array of the number of rows affected by each batch
      */
-    public int[] batchUpdate(String tenantId, String sql, List<Map<String, Object>> batchValues) {
+    public int[] batchUpdateWithNamedParams(String tenantId, String sql, List<Map<String, Object>> batchValues) {
         try {
             NamedParameterJdbcTemplate namedTemplate = getNamedParameterJdbcTemplate(tenantId);
             return namedTemplate.batchUpdate(sql, batchValues.toArray(new Map[0]));
@@ -232,4 +231,3 @@ public class TenantJdbcService {
         }
     }
 }
-

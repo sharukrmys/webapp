@@ -1,7 +1,6 @@
 package com.example.applib;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
@@ -29,4 +28,3 @@ class AppLibApplicationTests {
         // This test verifies that the Spring context loads successfully
     }
 }
-
