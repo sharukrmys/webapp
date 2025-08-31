@@ -90,12 +90,12 @@ subprojects {
     jar {
         enabled = true
     }
-}
-
-// Spring Cloud dependencies for all subprojects
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.0"
+    
+    // Apply Spring Cloud dependencies to all subprojects
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.0"
+        }
     }
 }
 

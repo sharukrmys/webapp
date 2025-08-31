@@ -20,8 +20,10 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-actuator'
     api 'org.springframework.boot:spring-boot-configuration-processor'
     
-    // Spring Cloud
+    // Spring Cloud - Feign
     api 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    api 'io.github.openfeign:feign-okhttp'
+    api 'io.github.openfeign:feign-jackson'
     
     // Database
     api 'org.postgresql:postgresql'
