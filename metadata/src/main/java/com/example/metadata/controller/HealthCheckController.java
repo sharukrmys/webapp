@@ -1,4 +1,4 @@
-package com.example.applib.controller;
+package com.example.metadata.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

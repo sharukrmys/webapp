@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TenantService {
+public class TenantJdbcService {
 
     private final JdbcTemplate masterJdbcTemplate;
 
@@ -212,3 +212,4 @@ public class TenantService {
         }
     }
 }
+
