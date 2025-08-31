@@ -1,17 +1,39 @@
+# Local environment configuration
 spring:
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/master_db
-    username: postgres
-    password: postgres
+    master:
+      url: jdbc:postgresql://localhost:5432/master_db
+      username: postgres
+      password: postgres
+  
+  # Disable Redis in local mode
+  redis:
+    enabled: false
+  
+  # Disable Kafka in local mode
+  kafka:
+    enabled: false
 
-# Local environment specific settings
+# AWS services use localstack in local mode
 aws:
-  enabled: false
-  
-redis:
-  enabled: false
-  
-kafka:
-  enabled: false
+  region: us-east-1
+  s3:
+    endpoint: http://localhost:4566
+  sqs:
+    endpoint: http://localhost:4566
+  secretsmanager:
+    endpoint: http://localhost:4566
+
+# Use local Minio instance
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+
+# Enable debug logging in local mode
+logging:
+  level:
+    com.example: DEBUG
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
 

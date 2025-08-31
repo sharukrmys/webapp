@@ -1,101 +1,67 @@
 package com.example.applib.config;
 
-import java.time.Duration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import org.springframework.beans.factory.annotation.Value;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
+import org.redisson.spring.cache.RedissonSpringCacheManager;
+import org.redisson.spring.data.connection.RedissonConnectionFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.cache.RedisCacheConfiguration;
-import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisPassword;
-import org.springframework.data.redis.connection.RedisSentinelConfiguration;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Configuration class for Redis.
+ * This is conditionally enabled based on the spring.redis.enabled property.
+ */
+@Slf4j
 @Configuration
-@EnableCaching
-@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "true", matchIfMissing = true)
+@RequiredArgsConstructor
+@ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "true")
 public class RedisConfig {
 
-    @Value("${spring.data.redis.mode:standalone}")
-    private String redisMode;
+    private final FeatureToggleConfig.RedisFeatureProperties redisProperties;
 
-    // Standalone configuration
-    @Value("${spring.data.redis.host:localhost}")
-    private String redisHost;
-
-    @Value("${spring.data.redis.port:6379}")
-    private int redisPort;
-
-    // Sentinel configuration
-    @Value("${spring.data.redis.sentinel.master:#{null}}")
-    private String sentinelMaster;
-
-    @Value("${spring.data.redis.sentinel.nodes:#{null}}")
-    private List<String> sentinelNodes;
-
-    @Value("${spring.data.redis.password:}")
-    private String redisPassword;
-
-    // Pool configuration
-    @Value("${spring.data.redis.lettuce.pool.max-active:8}")
-    private int maxActive;
-
-    @Value("${spring.data.redis.lettuce.pool.max-idle:8}")
-    private int maxIdle;
-
-    @Value("${spring.data.redis.lettuce.pool.min-idle:2}")
-    private int minIdle;
-
-    @Value("${spring.data.redis.lettuce.pool.max-wait:-1}")
-    private long maxWait;
-
-    @Value("${spring.data.redis.timeout:10000}")
-    private long timeout;
-
+    /**
+     * Creates a Redisson client for Redis operations.
+     */
     @Bean
-    public LettuceConnectionFactory redisConnectionFactory() {
-        if ("sentinel".equalsIgnoreCase(redisMode) && sentinelMaster != null && sentinelNodes != null && !sentinelNodes.isEmpty()) {
-            return createSentinelConnectionFactory();
+    public RedissonClient redissonClient() {
+        Config config = new Config();
+        String redisUrl = String.format("redis://%s:%d", 
+                redisProperties.getHost(), redisProperties.getPort());
+        
+        if (redisProperties.getPassword() != null && !redisProperties.getPassword().isEmpty()) {
+            config.useSingleServer()
+                    .setAddress(redisUrl)
+                    .setPassword(redisProperties.getPassword());
         } else {
-            return createStandaloneConnectionFactory();
+            config.useSingleServer().setAddress(redisUrl);
         }
+        
+        log.info("Configuring Redis connection to {}", redisUrl);
+        return Redisson.create(config);
     }
 
-    private LettuceConnectionFactory createStandaloneConnectionFactory() {
-        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(redisHost, redisPort);
-        if (redisPassword != null && !redisPassword.isEmpty()) {
-            configuration.setPassword(RedisPassword.of(redisPassword));
-        }
-        return new LettuceConnectionFactory(configuration);
+    /**
+     * Creates a Redis connection factory using Redisson.
+     */
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory(RedissonClient redissonClient) {
+        return new RedissonConnectionFactory(redissonClient);
     }
 
-    private LettuceConnectionFactory createSentinelConnectionFactory() {
-        RedisSentinelConfiguration sentinelConfig = new RedisSentinelConfiguration();
-        sentinelConfig.master(sentinelMaster);
-
-        Set<String> sentinels = new HashSet<>(sentinelNodes);
-        for (String node : sentinels) {
-            String[] parts = node.split(":");
-            sentinelConfig.sentinel(parts[0], Integer.parseInt(parts[1]));
-        }
-
-        if (redisPassword != null && !redisPassword.isEmpty()) {
-            sentinelConfig.setPassword(RedisPassword.of(redisPassword));
-        }
-
-        return new LettuceConnectionFactory(sentinelConfig);
-    }
-
+    /**
+     * Creates a Redis template for Redis operations.
+     */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
@@ -108,18 +74,23 @@ public class RedisConfig {
         return template;
     }
 
+    /**
+     * Creates a cache manager using Redisson.
+     */
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(10))
-                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
-                .disableCachingNullValues();
+    public CacheManager cacheManager(RedissonClient redissonClient) {
+        return new RedissonSpringCacheManager(redissonClient);
+    }
 
-        return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(cacheConfig)
-                .transactionAware()
-                .build();
+    /**
+     * Creates a Redis message listener container for pub/sub operations.
+     */
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerContainer(
+            RedisConnectionFactory connectionFactory) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        return container;
     }
 }
 

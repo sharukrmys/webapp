@@ -1,21 +1,18 @@
 package com.example.applib.tenant;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariDataSource;
-import jakarta.annotation.PostConstruct;
-import java.util.HashMap;
-import java.util.Map;
-import javax.sql.DataSource;
+import jakarta.persistence.EntityManagerFactory;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -23,222 +20,159 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Properties;
+
+/**
+ * Configuration class for tenant-specific data sources.
+ */
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        basePackages = {"com.example.applib.tenant"},
+        basePackages = {"com.example.*.repository"},
+        excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
+                type = org.springframework.context.annotation.FilterType.REGEX,
+                pattern = "com.example.applib.tenant.*"
+        ),
         entityManagerFactoryRef = "tenantEntityManagerFactory",
         transactionManagerRef = "tenantTransactionManager"
 )
 public class TenantDataSourceConfig {
 
-    @Value("${spring.datasource.url}")
-    private String datasourceUrl;
+    private final TenantDataSource tenantDataSource;
 
-    @Value("${spring.datasource.username}")
-    private String datasourceUsername;
+    @Value("${spring.jpa.database-platform}")
+    private String databasePlatform;
 
-    @Value("${spring.datasource.password}")
-    private String datasourcePassword;
+    @Value("${spring.jpa.hibernate.ddl-auto:update}")
+    private String ddlAuto;
 
-    @Value("${spring.datasource.driver-class-name}")
-    private String driverClassName;
+    @Value("${spring.jpa.properties.hibernate.format_sql:true}")
+    private String formatSql;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-    
-    @Autowired(required = false)
-    private MasterTenantRepository masterTenantRepository;
+    @Value("${spring.jpa.properties.hibernate.show_sql:false}")
+    private String showSql;
 
+    /**
+     * Creates a routing data source that selects the appropriate tenant data source
+     * based on the current tenant context.
+     */
     @Bean
-    public LocalContainerEntityManagerFactoryBean tenantEntityManagerFactory() {
-        LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-        em.setDataSource(tenantMasterDataSource());
-        em.setPackagesToScan("com.example.applib.tenant");
-
-        JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-        em.setJpaVendorAdapter(vendorAdapter);
-
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.hbm2ddl.auto", "update");
-        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-        properties.put("hibernate.show_sql", "true");
-        properties.put("hibernate.format_sql", "true");
-
-        em.setJpaPropertyMap(properties);
-
-        return em;
+    public DataSource tenantRoutingDataSource() {
+        TenantRoutingDataSource routingDataSource = new TenantRoutingDataSource();
+        routingDataSource.setTargetDataSources(new HashMap<>());
+        routingDataSource.setDefaultTargetDataSource(tenantDataSource.getDefaultDataSource());
+        return routingDataSource;
     }
 
+    /**
+     * Wraps the routing data source in a lazy connection proxy to defer
+     * getting a connection until it's actually needed.
+     */
     @Bean
-    public DataSource tenantMasterDataSource() {
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setDriverClassName(driverClassName);
-        dataSource.setJdbcUrl(datasourceUrl);
-        dataSource.setUsername(datasourceUsername);
-        dataSource.setPassword(datasourcePassword);
-        dataSource.setConnectionTimeout(30000);
-        dataSource.setIdleTimeout(600000);
-        dataSource.setMaxLifetime(1800000);
-        dataSource.setMaximumPoolSize(10);
-        dataSource.setMinimumIdle(5);
-        return dataSource;
+    @Primary
+    public DataSource tenantDataSource() {
+        return new LazyConnectionDataSourceProxy(tenantRoutingDataSource());
     }
 
+    /**
+     * Creates a JDBC template for the tenant data source.
+     */
     @Bean
-    public JdbcTemplate tenantMasterJdbcTemplate(@Qualifier("tenantMasterDataSource") DataSource dataSource) {
+    public JdbcTemplate tenantJdbcTemplate(@Qualifier("tenantDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
+    /**
+     * Creates a JDBC template for the master tenant data source.
+     */
     @Bean
-    public PlatformTransactionManager tenantTransactionManager() {
+    public JdbcTemplate tacJdbcTemplate(@Qualifier("masterDataSource") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
+
+    /**
+     * Creates an entity manager factory for tenant entities.
+     */
+    @Primary
+    @Bean
+    public LocalContainerEntityManagerFactoryBean tenantEntityManagerFactory() {
+        LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+        em.setDataSource(tenantDataSource());
+        em.setPackagesToScan("com.example.*.entity");
+        
+        // Exclude the master tenant entity using Java configuration
+        em.setPackagesToExclude("com.example.applib.tenant");
+        
+        JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        em.setJpaVendorAdapter(vendorAdapter);
+        em.setJpaProperties(hibernateProperties());
+        return em;
+    }
+
+    /**
+     * Creates a transaction manager for tenant transactions.
+     */
+    @Primary
+    @Bean
+    public PlatformTransactionManager tenantTransactionManager(
+            @Qualifier("tenantEntityManagerFactory") EntityManagerFactory emf) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(tenantEntityManagerFactory().getObject());
+        transactionManager.setEntityManagerFactory(emf);
         return transactionManager;
     }
 
+    /**
+     * Creates a post-processor for translating JPA exceptions to Spring's
+     * DataAccessException hierarchy.
+     */
     @Bean
     public PersistenceExceptionTranslationPostProcessor exceptionTranslation() {
         return new PersistenceExceptionTranslationPostProcessor();
     }
 
-    @Bean
-    public TenantRoutingDataSource tenantRoutingDataSource() {
-        TenantRoutingDataSource dataSource = new TenantRoutingDataSource();
-        dataSource.setDefaultTargetDataSource(tenantMasterDataSource());
-        dataSource.setTargetDataSources(new HashMap<>());
-        return dataSource;
+    /**
+     * Configures Hibernate properties for the tenant entity manager factory.
+     */
+    private Properties hibernateProperties() {
+        Properties properties = new Properties();
+        properties.put("hibernate.dialect", databasePlatform);
+        properties.put("hibernate.hbm2ddl.auto", ddlAuto);
+        properties.put("hibernate.format_sql", formatSql);
+        properties.put("hibernate.show_sql", showSql);
+        properties.put("hibernate.multiTenancy", "DATABASE");
+        properties.put("hibernate.tenant_identifier_resolver", "com.example.applib.tenant.TenantSchemaResolver");
+        properties.put("hibernate.jdbc.lob.non_contextual_creation", "true");
+        return properties;
     }
 
-    @Bean
-    public JdbcTemplate tenantJdbcTemplate(@Qualifier("tenantRoutingDataSource") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    @Bean
-    public DataSource tacDataSource() {
-        return new TenantAwareDataSource("tac");
-    }
-
-    @Bean
-    public JdbcTemplate tacJdbcTemplate(@Qualifier("tacDataSource") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    @Bean
-    public DataSource flexDataSource() {
-        return new TenantAwareDataSource("flex");
-    }
-
-    @Bean
-    public JdbcTemplate flexJdbcTemplate(@Qualifier("flexDataSource") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    @Bean
-    public DataSource readDataSource() {
-        return new TenantAwareDataSource("read");
-    }
-
-    @Bean
-    public JdbcTemplate readJdbcTemplate(@Qualifier("readDataSource") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    @Bean
-    public DataSource appstoreDataSource() {
-        return new TenantAwareDataSource("appstore");
-    }
-
-    @Bean
-    public JdbcTemplate appstoreJdbcTemplate(@Qualifier("appstoreDataSource") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    @PostConstruct
-    public void loadTenants() {
-        log.info("Loading all tenants from the master database");
+    /**
+     * Creates a data source for a specific tenant.
+     */
+    public DataSource createAndConfigureDataSource(MasterTenant masterTenant) {
+        HikariDataSource ds = new HikariDataSource();
+        ds.setUsername(masterTenant.getUsername());
+        ds.setPassword(masterTenant.getPassword());
+        ds.setJdbcUrl(masterTenant.getUrl());
+        ds.setDriverClassName("org.postgresql.Driver");
         
-        if (masterTenantRepository == null) {
-            log.warn("MasterTenantRepository is not available. Skipping tenant loading.");
-            return;
-        }
+        // HikariCP settings
+        ds.setConnectionTimeout(masterTenant.getConnectionTimeout() != null ? 
+                masterTenant.getConnectionTimeout() : 30000);
+        ds.setIdleTimeout(masterTenant.getIdleTimeout() != null ? 
+                masterTenant.getIdleTimeout() : 600000);
+        ds.setMaximumPoolSize(masterTenant.getMaxPoolSize() != null ? 
+                masterTenant.getMaxPoolSize() : 10);
+        ds.setMinimumIdle(masterTenant.getMinIdle() != null ? 
+                masterTenant.getMinIdle() : 2);
+        ds.setPoolName("HikariPool-" + masterTenant.getTenantId());
         
-        try {
-            Iterable<MasterTenant> tenants = masterTenantRepository.findByIsActiveTrue();
-            Map<Object, Object> tenantDataSources = new HashMap<>();
-
-            for (MasterTenant tenant : tenants) {
-                try {
-                    DataSource dataSource = createDataSource(tenant);
-                    tenantDataSources.put(tenant.getTenantId(), dataSource);
-                    log.info("Loaded tenant: {}", tenant.getTenantId());
-                } catch (Exception e) {
-                    log.error("Error loading tenant: {}", tenant.getTenantId(), e);
-                }
-            }
-
-            TenantRoutingDataSource tenantRoutingDataSource = tenantRoutingDataSource();
-            tenantRoutingDataSource.setTargetDataSources(tenantDataSources);
-            tenantRoutingDataSource.afterPropertiesSet();
-
-            log.info("Loaded {} active tenants", tenantDataSources.size());
-        } catch (Exception e) {
-            log.error("Error loading tenants", e);
-            log.info("Will continue without loading tenants. They will be loaded on demand.");
-        }
-    }
-
-    private DataSource createDataSource(MasterTenant tenant) {
-        try {
-            HikariDataSource dataSource = new HikariDataSource();
-            dataSource.setDriverClassName(driverClassName);
-            dataSource.setJdbcUrl(tenant.getUrl());
-            dataSource.setUsername(tenant.getUsername());
-            dataSource.setPassword(tenant.getPassword());
-
-            // Parse DB properties from JSON string
-            if (tenant.getDbProperties() != null && !tenant.getDbProperties().isEmpty()) {
-                Map<String, Object> dbProps = objectMapper.readValue(tenant.getDbProperties(), Map.class);
-
-                if (dbProps.containsKey("connectionTimeout") && tenant.getConnectionTimeout() == null) {
-                    dataSource.setConnectionTimeout(Long.parseLong(dbProps.get("connectionTimeout").toString()));
-                } else if (tenant.getConnectionTimeout() != null) {
-                    dataSource.setConnectionTimeout(tenant.getConnectionTimeout());
-                }
-
-                if (dbProps.containsKey("idleTimeout") && tenant.getIdleTimeout() == null) {
-                    dataSource.setIdleTimeout(Long.parseLong(dbProps.get("idleTimeout").toString()));
-                } else if (tenant.getIdleTimeout() != null) {
-                    dataSource.setIdleTimeout(tenant.getIdleTimeout());
-                }
-
-                if (dbProps.containsKey("maxPoolSize") && tenant.getMaxPoolSize() == null) {
-                    dataSource.setMaximumPoolSize(Integer.parseInt(dbProps.get("maxPoolSize").toString()));
-                } else if (tenant.getMaxPoolSize() != null) {
-                    dataSource.setMaximumPoolSize(tenant.getMaxPoolSize());
-                }
-
-                if (dbProps.containsKey("minIdle") && tenant.getMinIdle() == null) {
-                    dataSource.setMinimumIdle(Integer.parseInt(dbProps.get("minIdle").toString()));
-                } else if (tenant.getMinIdle() != null) {
-                    dataSource.setMinimumIdle(tenant.getMinIdle());
-                }
-            } else {
-                // Default values
-                dataSource.setConnectionTimeout(30000);
-                dataSource.setIdleTimeout(600000);
-                dataSource.setMaxLifetime(1800000);
-                dataSource.setMaximumPoolSize(10);
-                dataSource.setMinimumIdle(5);
-            }
-
-            return dataSource;
-        } catch (Exception e) {
-            log.error("Error creating data source for tenant: {}", tenant.getTenantId(), e);
-            throw new RuntimeException("Failed to create data source for tenant: " + tenant.getTenantId(), e);
-        }
+        log.info("Configured datasource for tenant {}. Connection pool name: {}", 
+                masterTenant.getTenantId(), ds.getPoolName());
+        return ds;
     }
 }
 

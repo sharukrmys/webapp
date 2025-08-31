@@ -1,68 +1,118 @@
+# Common configuration for all services
 spring:
+  application:
+    name: multi-tenant-app
+  
+  # Database configuration
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/master_db
-    username: postgres
-    password: postgres
-    hikari:
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      maximum-pool-size: 10
-      minimum-idle: 5
+    master:
+      url: jdbc:postgresql://localhost:5432/master_db
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        minimum-idle: 2
+        maximum-pool-size: 10
+        idle-timeout: 30000
+        pool-name: MasterHikariPool
+        max-lifetime: 2000000
+        connection-timeout: 30000
+  
+  # JPA configuration
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-    show-sql: true
+        show_sql: false
+        use_sql_comments: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  
+  # Redis configuration
+  redis:
+    enabled: true
+    host: localhost
+    port: 6379
+    password:
+    timeout: 10000
+    database: 0
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+  
+  # Kafka configuration
+  kafka:
+    enabled: true
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: multi-tenant-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
-# Common configuration for all environments
+# AWS configuration
+aws:
+  region: us-east-1
+  s3:
+    enabled: true
+    endpoint: http://localhost:4566
+    bucket-name: multi-tenant-bucket
+  sqs:
+    enabled: true
+    endpoint: http://localhost:4566
+    queue-name: multi-tenant-queue
+  secretsmanager:
+    enabled: true
+    endpoint: http://localhost:4566
+
+# Minio configuration
+minio:
+  enabled: true
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: multi-tenant-bucket
+
+# Server configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  health:
+    redis:
+      enabled: ${spring.redis.enabled}
+
+# Logging configuration
 logging:
   level:
-    org.springframework: INFO
+    root: INFO
     com.example: DEBUG
+    org.springframework: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
-# AWS configuration (disabled in local mode)
-aws:
-  enabled: false
-  region: us-east-1
-  sqs:
-    enabled: false
-    endpoint: http://localhost:4566
-  s3:
-    enabled: false
-    endpoint: http://localhost:4566
-  secretsmanager:
-    enabled: false
-    endpoint: http://localhost:4566
-
-# Redis configuration (disabled in local mode)
-redis:
-  enabled: false
-  host: localhost
-  port: 6379
-  password:
-  timeout: 2000
-  cache:
-    enabled: false
-  queue:
-    enabled: false
-  pubsub:
-    enabled: false
-
-# Kafka configuration (disabled in local mode)
-kafka:
-  enabled: false
-  bootstrap-servers: localhost:9092
-  consumer:
-    group-id: metadata-group
-    auto-offset-reset: earliest
-  producer:
-    key-serializer: org.apache.kafka.common.serialization.StringSerializer
-    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+# Tenant configuration
+tenant:
+  default-tenant: default
+  header-name: X-TenantID
 
