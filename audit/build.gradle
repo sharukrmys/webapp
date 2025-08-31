@@ -3,6 +3,13 @@ plugins {
     id 'java'
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.0")
+        mavenBom("software.amazon.awssdk:bom:2.25.11")
+    }
+}
+
 dependencies {
     implementation project(':app-lib')
     
