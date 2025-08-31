@@ -22,6 +22,8 @@ spring:
         format_sql: true
     show-sql: false
   redis:
+    enabled: true
+    mode: standalone
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
@@ -33,6 +35,7 @@ spring:
         min-idle: 2
         max-wait: -1
   kafka:
+    enabled: true
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: ${spring.application.name}
@@ -56,12 +59,26 @@ server:
 
 aws:
   region: ${AWS_REGION:us-east-1}
+  use-instance-profile: ${AWS_USE_INSTANCE_PROFILE:true}
   s3:
-    enabled: true
+    enabled: ${AWS_S3_ENABLED:true}
   sqs:
-    enabled: true
+    enabled: ${AWS_SQS_ENABLED:true}
   secretsmanager:
-    enabled: true
+    enabled: ${AWS_SECRETSMANAGER_ENABLED:true}
+
+# Feature toggles for local development
+features:
+  kafka:
+    enabled: ${FEATURE_KAFKA_ENABLED:true}
+  redis:
+    enabled: ${FEATURE_REDIS_ENABLED:true}
+  s3:
+    enabled: ${FEATURE_S3_ENABLED:true}
+  sqs:
+    enabled: ${FEATURE_SQS_ENABLED:true}
+  secretsmanager:
+    enabled: ${FEATURE_SECRETSMANAGER_ENABLED:true}
 
 services:
   data:

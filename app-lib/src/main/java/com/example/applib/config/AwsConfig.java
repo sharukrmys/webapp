@@ -20,7 +20,7 @@ public class AwsConfig {
     @Value("${aws.enabled:true}")
     private boolean awsEnabled;
 
-    @Value("${aws.use-instance-profile:false}")
+    @Value("${aws.use-instance-profile:true}")
     private boolean useInstanceProfile;
 
     @Value("${aws.profile:default}")
@@ -37,6 +37,11 @@ public class AwsConfig {
         return Region.of(awsRegion);
     }
 
+    /**
+     * AWS Credentials Provider for non-local environments.
+     * By default, uses EC2/EKS instance profile credentials.
+     * Falls back to explicit credentials if configured.
+     */
     @Bean
     @Profile("!local")
     public AwsCredentialsProvider awsCredentialsProviderProd() {
@@ -44,20 +49,26 @@ public class AwsConfig {
             return null;
         }
 
+        // Default to instance profile credentials (EC2/EKS/K8s)
         if (useInstanceProfile) {
-            // Use instance profile credentials (EC2/EKS)
             return DefaultCredentialsProvider.create();
-        } else if (accessKey != null && secretKey != null) {
-            // Use static credentials
+        } 
+        // Use explicit credentials if provided
+        else if (accessKey != null && !accessKey.isEmpty() && secretKey != null && !secretKey.isEmpty()) {
             return StaticCredentialsProvider.create(
                     AwsBasicCredentials.create(accessKey, secretKey)
             );
-        } else {
-            // Use profile credentials
+        } 
+        // Fall back to profile credentials
+        else {
             return ProfileCredentialsProvider.create(awsProfile);
         }
     }
 
+    /**
+     * AWS Credentials Provider for local development.
+     * Uses explicit credentials if provided, otherwise falls back to profile.
+     */
     @Bean
     @Profile("local")
     public AwsCredentialsProvider awsCredentialsProviderLocal() {
@@ -65,14 +76,16 @@ public class AwsConfig {
             return null;
         }
 
-        if (accessKey != null && secretKey != null) {
-            // Use static credentials
+        // For local development, prefer explicit credentials
+        if (accessKey != null && !accessKey.isEmpty() && secretKey != null && !secretKey.isEmpty()) {
             return StaticCredentialsProvider.create(
                     AwsBasicCredentials.create(accessKey, secretKey)
             );
-        } else {
-            // Use profile credentials
+        } 
+        // Fall back to profile credentials
+        else {
             return ProfileCredentialsProvider.create(awsProfile);
         }
     }
 }
+

@@ -9,20 +9,38 @@ spring:
       ddl-auto: update
     show-sql: true
   redis:
-    enabled: false
+    enabled: ${FEATURE_REDIS_ENABLED:false}
+    mode: standalone
+    host: localhost
+    port: 6379
   kafka:
-    enabled: false
+    enabled: ${FEATURE_KAFKA_ENABLED:false}
 
 aws:
+  region: ${AWS_REGION:us-east-1}
+  use-instance-profile: false
   s3:
-    enabled: false
+    enabled: ${FEATURE_S3_ENABLED:false}
   sqs:
-    enabled: false
+    enabled: ${FEATURE_SQS_ENABLED:false}
   secretsmanager:
-    enabled: false
+    enabled: ${FEATURE_SECRETSMANAGER_ENABLED:false}
+
+# Feature toggles for local development
+features:
+  kafka:
+    enabled: ${FEATURE_KAFKA_ENABLED:false}
+  redis:
+    enabled: ${FEATURE_REDIS_ENABLED:false}
+  s3:
+    enabled: ${FEATURE_S3_ENABLED:false}
+  sqs:
+    enabled: ${FEATURE_SQS_ENABLED:false}
+  secretsmanager:
+    enabled: ${FEATURE_SECRETSMANAGER_ENABLED:false}
 
 minio:
-  enabled: true
+  enabled: ${MINIO_ENABLED:true}
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
   secret-key: ${MINIO_SECRET_KEY:minioadmin}

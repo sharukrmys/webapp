@@ -1,72 +1,134 @@
 # Multi-Module Spring Boot Application
 
-A multi-tenant Spring Boot application with multiple deployment modules, AWS integration, and Redis support.
-
-## Technology Stack
-
-- **Java**: 21
-- **Spring Boot**: 3.2.4
-- **Gradle**: 8.7
-- **Database**: PostgreSQL
-- **Cache**: Redis (standalone and sentinel modes)
-- **AWS Services**: S3, SQS, SecretsManager, Athena
-- **Local Development**: Minio (S3-compatible storage)
-- **Documentation**: Swagger/OpenAPI
-- **Security**: Nimbus JOSE JWT
-- **Utilities**: Guava, Apache Commons
+This is a multi-module Spring Boot application with AWS services integration and multi-tenant architecture.
 
 ## Project Structure
 
-The project consists of the following modules:
-
-- **app-lib**: Common library module with shared configurations and utilities
-- **data**: Data service module
-- **attachment**: Attachment service module
-- **metadata**: Metadata service module
-- **user-management**: User Management service module
-- **report**: Report service module
-- **audit**: Audit service module
-
-## Multi-Tenant Architecture
-
-The application uses a multi-tenant architecture with the following components:
-
-- **Master Tenant Table**: Stores tenant database configurations
-- **JPA for Fixed Schemas**: Used for master tenant and S3 config tables
-- **JDBC Template for Dynamic Schemas**: Used for tenant-specific operations
-- **Named JDBC Templates**:
-  - `masterJdbcTemplate`: For master tenant database
-  - `tacJdbcTemplate`: For TAC database
-  - `flexJdbcTemplate`: For FLEX database
-  - `readJdbcTemplate`: For READ database
-  - `appstoreJdbcTemplate`: For APPSTORE database
-- **Tenant Context**: ThreadLocal-based tenant identification
-- **Tenant Interceptor**: Extracts tenant ID from X-TenantID header
-
-## Prerequisites
-
 - Java 21
-- Docker and Docker Compose (for local development)
-- PostgreSQL
-- Redis
-- Minio (for local development)
+- Spring Boot 3.2.4 (will be updated to 3.5.3 when available)
+- Gradle 8.5 (will be updated to 8.14+ when available)
+- Multi-module architecture with shared library module
 
-## Getting Started
+## Modules
 
-### Clone the Repository
+1. **app-lib**: Shared library module with common utilities and configurations
+2. **data**: Data service for database operations
+3. **attachment**: Service for file attachments and S3 operations
+4. **metadata**: Service for metadata management
+5. **user-management**: Service for user authentication and authorization
+6. **report**: Service for report generation
+7. **audit**: Service for audit logging
 
-```bash
-git clone https://github.com/yourusername/multi-module-spring-boot.git
-cd multi-module-spring-boot
+## Features
+
+- Multi-tenant architecture with master tenant table
+- AWS service integrations (S3, SQS, Secrets Manager)
+- Redis for caching, queue, and pub/sub (supports both standalone and sentinel modes)
+- PostgreSQL database support
+- Environment-specific configuration files
+- MinIO for local development
+
+## Configuration
+
+### Redis Configuration
+
+The application supports both standalone Redis and Redis Sentinel configurations:
+
+#### Standalone Redis (Default for local development)
+
+```yaml
+spring:
+  redis:
+    enabled: true
+    mode: standalone
+    host: localhost
+    port: 6379
+    password: 
 ```
 
-### Build the Project
+#### Redis Sentinel (For production environments)
 
-```bash
-./gradlew clean build
+```yaml
+spring:
+  redis:
+    enabled: true
+    mode: sentinel
+    sentinel:
+      master: mymaster
+      nodes: redis-sentinel-0:26379,redis-sentinel-1:26379,redis-sentinel-2:26379
+    password: ${REDIS_PASSWORD}
 ```
 
-### Run the Application Locally
+### AWS Configuration
+
+By default, the application uses IAM instance profile credentials for AWS services in non-local environments:
+
+```yaml
+aws:
+  region: us-east-1
+  use-instance-profile: true  # Uses EC2/EKS/K8s instance profile
+  s3:
+    enabled: true
+  sqs:
+    enabled: true
+  secretsmanager:
+    enabled: true
+```
+
+For local development, you can provide explicit credentials:
+
+```yaml
+aws:
+  region: us-east-1
+  use-instance-profile: false
+  access-key: your-access-key
+  secret-key: your-secret-key
+  s3:
+    enabled: true
+  sqs:
+    enabled: true
+  secretsmanager:
+    enabled: true
+```
+
+### Feature Toggles
+
+The application supports feature toggles to enable/disable various components, especially useful for local development:
+
+```yaml
+# Feature toggles
+features:
+  kafka:
+    enabled: false  # Disable Kafka
+  redis:
+    enabled: false  # Disable Redis
+  s3:
+    enabled: false  # Disable S3
+  sqs:
+    enabled: false  # Disable SQS
+  secretsmanager:
+    enabled: false  # Disable Secrets Manager
+```
+
+You can enable/disable these features using environment variables:
+
+```bash
+export FEATURE_KAFKA_ENABLED=false
+export FEATURE_REDIS_ENABLED=true
+export FEATURE_S3_ENABLED=false
+export FEATURE_SQS_ENABLED=false
+export FEATURE_SECRETSMANAGER_ENABLED=false
+```
+
+Or via command-line arguments:
+
+```bash
+java -jar app.jar --features.kafka.enabled=false --features.redis.enabled=true
+```
+
+## How to Run
+
+### Local Development
 
 1. Start the required services using Docker Compose:
 
@@ -77,145 +139,49 @@ docker-compose up -d
 2. Run the application with the local profile:
 
 ```bash
-./gradlew data:bootRun --args='--spring.profiles.active=local'
+./gradlew bootRun --args='--spring.profiles.active=local'
 ```
 
-### Access the Application
+### Production Deployment
 
-- **API**: http://localhost:8080/api
-- **Swagger UI**: http://localhost:8080/api/swagger-ui.html
-- **Actuator**: http://localhost:8080/api/actuator
-
-## Environment Configuration
-
-The application supports different environments through Spring profiles:
-
-- **local**: Local development with Minio instead of S3, disabled Redis/Kafka
-- **dev**: Development environment
-- **qa**: QA environment with Redis Sentinel
-- **prod**: Production environment with Redis Sentinel
-
-### Environment Variables
-
-The following environment variables can be set for different environments:
+1. Build the application:
 
 ```bash
-# Database
-export DB_USERNAME=postgres
-export DB_PASSWORD=postgres
-
-# Redis
-export REDIS_HOST=localhost
-export REDIS_PORT=6379
-export REDIS_PASSWORD=
-
-# AWS
-export AWS_REGION=us-east-1
-export AWS_ACCESS_KEY_ID=your-access-key
-export AWS_SECRET_ACCESS_KEY=your-secret-key
-
-# Minio (for local development)
-export MINIO_ENDPOINT=http://localhost:9000
-export MINIO_ACCESS_KEY=minioadmin
-export MINIO_SECRET_KEY=minioadmin
-```
-
-## Docker and Kubernetes Deployment
-
-### Build Docker Images
-
-```bash
-# Build all modules
 ./gradlew clean build
-
-# Build Docker images
-docker build -t multi-module-spring-boot/data:latest -f data/Dockerfile .
-docker build -t multi-module-spring-boot/attachment:latest -f attachment/Dockerfile .
-docker build -t multi-module-spring-boot/metadata:latest -f metadata/Dockerfile .
-docker build -t multi-module-spring-boot/user-management:latest -f user-management/Dockerfile .
-docker build -t multi-module-spring-boot/report:latest -f report/Dockerfile .
-docker build -t multi-module-spring-boot/audit:latest -f audit/Dockerfile .
 ```
 
-### Deploy to Kubernetes
+2. Deploy the application using Kubernetes:
 
 ```bash
-# Apply Kubernetes manifests
 kubectl apply -f kubernetes/
 ```
 
-## VS Code Setup
+## Multi-Tenant Architecture
 
-1. Install the following extensions:
-   - Extension Pack for Java
-   - Spring Boot Extension Pack
-   - Gradle for Java
-   - Docker
-   - Kubernetes
+The application uses a master tenant table to store connection details for each tenant:
 
-2. Configure VS Code settings:
-
-```json
-{
-  "java.configuration.updateBuildConfiguration": "automatic",
-  "java.compile.nullAnalysis.mode": "automatic",
-  "java.format.enabled": true,
-  "editor.formatOnSave": true,
-  "java.format.settings.url": ".vscode/java-formatter.xml",
-  "java.format.settings.profile": "GoogleStyle",
-  "java.test.config": {
-    "vmArgs": [
-      "-Dspring.profiles.active=test"
-    ]
-  }
-}
+```sql
+CREATE TABLE public.master_tenant (
+    id bigserial NOT NULL,
+    dialect varchar(255) NULL,
+    password varchar(30) NULL,
+    tenant_id varchar(30) NULL,
+    url varchar(256) NULL,
+    username varchar(30) NULL,
+    version int4 NOT NULL,
+    flexdb varchar(255) NULL,
+    procedures_filename varchar(255) DEFAULT 'procedures.sql'::character varying NULL,
+    readdb varchar NULL,
+    appstoredb varchar(256) NULL,
+    db_properties text DEFAULT '{"minIdle": 1,"maxPoolSize":3,"connectionTimeout":1,"idleTimeout":1}'::text NULL,
+    isactive bool DEFAULT true NULL,
+    connectiontimeout int8 NULL,
+    idletimeout int8 NULL,
+    maxpoolsize int4 NULL,
+    minidle int4 NULL,
+    CONSTRAINT master_tenant_pkey PRIMARY KEY (id)
+);
 ```
 
-3. Create a launch configuration:
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "java",
-      "name": "Data Service (Local)",
-      "request": "launch",
-      "mainClass": "com.example.data.DataApplication",
-      "projectName": "data",
-      "args": "--spring.profiles.active=local",
-      "env": {
-        "DB_USERNAME": "postgres",
-        "DB_PASSWORD": "postgres"
-      }
-    }
-  ]
-}
-```
-
-## API Documentation
-
-The API documentation is available through Swagger UI at:
-
-```
-http://localhost:8080/api/swagger-ui.html
-```
-
-## Testing
-
-Run the tests with:
-
-```bash
-./gradlew test
-```
-
-Generate test coverage reports:
-
-```bash
-./gradlew jacocoTestReport
-```
-
-## License
-
-This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
+The application uses a tenant-aware data source to route database requests to the appropriate tenant database.
 

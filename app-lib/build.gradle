@@ -1,37 +1,77 @@
+plugins {
+    id 'java-library'
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
 dependencies {
-    // AWS SDK
-    implementation 'software.amazon.awssdk:s3:2.25.0'
-    implementation 'software.amazon.awssdk:sqs:2.25.0'
-    implementation 'software.amazon.awssdk:secretsmanager:2.25.0'
-    implementation 'software.amazon.awssdk:athena:2.25.0'
+    // Spring Boot
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+    api 'org.springframework.boot:spring-boot-starter-cache'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+    api 'org.springframework.boot:spring-boot-configuration-processor'
     
-    // Redis
-    implementation 'org.redisson:redisson:3.27.0'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // Spring Cloud
+    api 'org.springframework.cloud:spring-cloud-starter-openfeign'
     
     // Database
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.postgresql:postgresql'
-    implementation 'com.zaxxer:HikariCP'
+    api 'org.postgresql:postgresql'
+    api 'com.zaxxer:HikariCP'
     
-    // Feign Client
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    implementation 'io.github.openfeign:feign-okhttp'
-    implementation 'io.github.openfeign:feign-jackson'
-    
-    // Utilities
-    implementation 'com.google.guava:guava:33.0.0-jre'
-    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
-    implementation 'com.google.code.gson:gson:2.10.1'
-    
-    // MinIO
-    implementation 'io.minio:minio:8.5.9'
-    
-    // OpenAPI/Swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0'
+    // Redis
+    api 'org.apache.commons:commons-pool2'
     
     // Kafka
-    implementation 'org.springframework.kafka:spring-kafka'
+    api 'org.springframework.kafka:spring-kafka'
+    
+    // AWS SDK v2
+    api 'software.amazon.awssdk:s3'
+    api 'software.amazon.awssdk:sqs'
+    api 'software.amazon.awssdk:secretsmanager'
+    api 'software.amazon.awssdk:athena'
+    
+    // Minio
+    api 'io.minio:minio:8.5.7'
+    
+    // Swagger/OpenAPI
+    api 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    
+    // Guava
+    api 'com.google.guava:guava:33.0.0-jre'
+    
+    // JWT
+    api 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+    
+    // Apache POI
+    api 'org.apache.poi:poi:5.4.1'
+    api 'org.apache.poi:poi-ooxml:5.4.1'
+    
+    // DocX4j
+    api 'org.docx4j:docx4j-core:11.5.0'
+    api 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.0'
+    
+    // Jackson
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    
+    // Utilities
+    api 'org.apache.commons:commons-lang3'
+    api 'commons-io:commons-io:2.15.1'
+    
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

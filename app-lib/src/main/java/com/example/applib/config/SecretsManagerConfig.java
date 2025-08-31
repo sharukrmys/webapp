@@ -1,60 +1,51 @@
 package com.example.applib.config;
 
-import java.net.URI;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+
+import com.example.applib.service.FeatureToggleService;
+
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilder;
 
 @Configuration
+@Slf4j
+@ConditionalOnProperty(name = "aws.secretsmanager.enabled", havingValue = "true")
 public class SecretsManagerConfig {
 
-    @Value("${aws.enabled:true}")
-    private boolean awsEnabled;
+    @Value("${aws.region}")
+    private String region;
 
-    @Value("${aws.secretsmanager.enabled:true}")
-    private boolean secretsManagerEnabled;
+    @Autowired
+    private AwsCredentialsProvider awsCredentialsProvider;
+    
+    @Autowired
+    private FeatureToggleService featureToggleService;
 
-    @Value("${aws.endpoint-override:#{null}}")
-    private String endpointOverride;
-
+    /**
+     * Creates a Secrets Manager client using the AWS SDK v2.
+     * Uses IAM instance profile credentials by default.
+     * 
+     * @return SecretsManagerClient
+     */
     @Bean
-    @Profile("!local")
-    public SecretsManagerClient secretsManagerClientProd(Region awsRegion, AwsCredentialsProvider awsCredentialsProvider) {
-        if (!awsEnabled || !secretsManagerEnabled) {
-            return null;
+    @ConditionalOnProperty(name = "features.secretsmanager.enabled", havingValue = "true", matchIfMissing = true)
+    public SecretsManagerClient secretsManagerClient() {
+        log.info("Configuring Secrets Manager client with region: {}", region);
+        
+        if (!featureToggleService.isSecretsManagerEnabled()) {
+            log.warn("Secrets Manager feature is disabled, but Secrets Manager client is being created. This may cause issues.");
         }
-
-        SecretsManagerClientBuilder builder = SecretsManagerClient.builder()
-                .region(awsRegion)
-                .credentialsProvider(awsCredentialsProvider);
-
-        if (endpointOverride != null && !endpointOverride.isEmpty()) {
-            builder.endpointOverride(URI.create(endpointOverride));
-        }
-
-        return builder.build();
-    }
-
-    @Bean
-    @Profile("local")
-    public SecretsManagerClient secretsManagerClientLocal(Region awsRegion, AwsCredentialsProvider awsCredentialsProvider) {
-        if (!awsEnabled || !secretsManagerEnabled) {
-            return null;
-        }
-
-        SecretsManagerClientBuilder builder = SecretsManagerClient.builder()
-                .region(awsRegion)
-                .credentialsProvider(awsCredentialsProvider);
-
-        if (endpointOverride != null && !endpointOverride.isEmpty()) {
-            builder.endpointOverride(URI.create(endpointOverride));
-        }
-
-        return builder.build();
+        
+        return SecretsManagerClient.builder()
+                .region(Region.of(region))
+                .credentialsProvider(awsCredentialsProvider)
+                .build();
     }
 }
+
