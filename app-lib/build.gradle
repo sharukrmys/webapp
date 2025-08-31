@@ -12,66 +12,44 @@ jar {
 
 dependencies {
     // Spring Boot
+    api 'org.springframework.boot:spring-boot-starter'
     api 'org.springframework.boot:spring-boot-starter-web'
-    api 'org.springframework.boot:spring-boot-starter-data-jpa'
-    api 'org.springframework.boot:spring-boot-starter-data-redis'
-    api 'org.springframework.boot:spring-boot-starter-cache'
     api 'org.springframework.boot:spring-boot-starter-validation'
     api 'org.springframework.boot:spring-boot-starter-actuator'
-    api 'org.springframework.boot:spring-boot-configuration-processor'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
     
-    // Spring Cloud - Feign
+    // Spring Cloud
     api 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    api 'io.github.openfeign:feign-okhttp'
-    api 'io.github.openfeign:feign-jackson'
+    
+    // AWS SDK
+    api 'software.amazon.awssdk:s3:2.25.12'
+    api 'software.amazon.awssdk:sqs:2.25.12'
+    api 'software.amazon.awssdk:secretsmanager:2.25.12'
+    
+    // Minio
+    api 'io.minio:minio:8.5.9'
     
     // Database
     api 'org.postgresql:postgresql'
     api 'com.zaxxer:HikariCP'
     
     // Redis
-    api 'org.apache.commons:commons-pool2'
-    api 'org.redisson:redisson:3.27.1'
-    
-    // Kafka
-    api 'org.springframework.kafka:spring-kafka'
-    
-    // AWS SDK v2
-    api 'software.amazon.awssdk:s3:2.25.1'
-    api 'software.amazon.awssdk:sqs:2.25.1'
-    api 'software.amazon.awssdk:secretsmanager:2.25.1'
-    api 'software.amazon.awssdk:athena:2.25.1'
-    
-    // Minio
-    api 'io.minio:minio:8.5.7'
-    
-    // Swagger/OpenAPI
-    api 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    api 'org.redisson:redisson-spring-boot-starter:3.27.2'
     
     // Guava
-    api 'com.google.guava:guava:33.0.0-jre'
+    api 'com.google.guava:guava'
     
-    // Gson
-    api 'com.google.code.gson:gson:2.10.1'
+    // Nimbus JOSE JWT
+    api 'com.nimbusds:nimbus-jose-jwt'
     
-    // JWT
-    api 'com.nimbusds:nimbus-jose-jwt:9.37.3'
-    
-    // Apache POI
-    api 'org.apache.poi:poi:5.4.1'
-    api 'org.apache.poi:poi-ooxml:5.4.1'
-    
-    // DocX4j
-    api 'org.docx4j:docx4j-core:11.5.0'
-    api 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.0'
+    // Apache Commons
+    api 'org.apache.commons:commons-lang3:3.14.0'
+    api 'commons-io:commons-io:2.15.1'
     
     // Jackson
     api 'com.fasterxml.jackson.core:jackson-databind'
     api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    
-    // Utilities
-    api 'org.apache.commons:commons-lang3'
-    api 'commons-io:commons-io:2.15.1'
     
     // Lombok
     compileOnly 'org.projectlombok:lombok'
@@ -79,6 +57,6 @@ dependencies {
     
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'com.h2database:h2'
+    testImplementation 'org.postgresql:postgresql'
 }
 
