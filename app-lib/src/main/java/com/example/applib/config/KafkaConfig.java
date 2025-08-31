@@ -2,7 +2,7 @@ package com.example.applib.config;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -23,8 +23,6 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.ContainerProperties.AckMode;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableKafka
@@ -109,4 +107,3 @@ public class KafkaConfig {
         return factory;
     }
 }
-

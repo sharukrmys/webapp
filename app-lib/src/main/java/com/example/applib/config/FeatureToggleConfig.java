@@ -1,9 +1,8 @@
 package com.example.applib.config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-
-import lombok.Data;
 
 /**
  * Configuration for feature toggles.
@@ -25,4 +24,3 @@ public class FeatureToggleConfig {
         private boolean enabled = true;
     }
 }
-

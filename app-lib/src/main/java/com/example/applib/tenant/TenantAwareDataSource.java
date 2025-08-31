@@ -18,10 +18,10 @@ public class TenantAwareDataSource extends AbstractDataSource {
 
     private final String dbType;
     private final Map<String, DataSource> tenantDataSources = new ConcurrentHashMap<>();
-    
+
     @Autowired
     private MasterTenantRepository masterTenantRepository;
-    
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -61,11 +61,11 @@ public class TenantAwareDataSource extends AbstractDataSource {
         try {
             // Get the tenant from the repository
             Optional<MasterTenant> optionalTenant = masterTenantRepository.findByTenantIdAndIsActiveTrue(tenantId);
-            
+
             if (optionalTenant.isEmpty()) {
                 throw new DataSourceLookupFailureException("Tenant not found or not active: " + tenantId);
             }
-            
+
             MasterTenant tenant = optionalTenant.get();
 
             // Determine which database URL to use based on the db type
@@ -97,29 +97,29 @@ public class TenantAwareDataSource extends AbstractDataSource {
             dataSource.setJdbcUrl(dbUrl);
             dataSource.setUsername(tenant.getUsername());
             dataSource.setPassword(tenant.getPassword());
-            
+
             // Parse DB properties from JSON string
             if (tenant.getDbProperties() != null && !tenant.getDbProperties().isEmpty()) {
                 Map<String, Object> dbProps = objectMapper.readValue(tenant.getDbProperties(), Map.class);
-                
+
                 if (dbProps.containsKey("connectionTimeout") && tenant.getConnectionTimeout() == null) {
                     dataSource.setConnectionTimeout(Long.parseLong(dbProps.get("connectionTimeout").toString()));
                 } else if (tenant.getConnectionTimeout() != null) {
                     dataSource.setConnectionTimeout(tenant.getConnectionTimeout());
                 }
-                
+
                 if (dbProps.containsKey("idleTimeout") && tenant.getIdleTimeout() == null) {
                     dataSource.setIdleTimeout(Long.parseLong(dbProps.get("idleTimeout").toString()));
                 } else if (tenant.getIdleTimeout() != null) {
                     dataSource.setIdleTimeout(tenant.getIdleTimeout());
                 }
-                
+
                 if (dbProps.containsKey("maxPoolSize") && tenant.getMaxPoolSize() == null) {
                     dataSource.setMaximumPoolSize(Integer.parseInt(dbProps.get("maxPoolSize").toString()));
                 } else if (tenant.getMaxPoolSize() != null) {
                     dataSource.setMaximumPoolSize(tenant.getMaxPoolSize());
                 }
-                
+
                 if (dbProps.containsKey("minIdle") && tenant.getMinIdle() == null) {
                     dataSource.setMinimumIdle(Integer.parseInt(dbProps.get("minIdle").toString()));
                 } else if (tenant.getMinIdle() != null) {
@@ -133,7 +133,7 @@ public class TenantAwareDataSource extends AbstractDataSource {
                 dataSource.setMaximumPoolSize(10);
                 dataSource.setMinimumIdle(5);
             }
-            
+
             return dataSource;
         } catch (Exception e) {
             log.error("Error creating data source for tenant: {} and db type: {}", tenantId, dbType, e);

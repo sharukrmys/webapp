@@ -28,7 +28,7 @@ public class SecretsManagerUtil {
 
     /**
      * Get a secret value from AWS Secrets Manager
-     * 
+     *
      * @param secretName The name of the secret
      * @return The secret value as a string
      */
@@ -54,7 +54,7 @@ public class SecretsManagerUtil {
 
     /**
      * Get a secret as a JSON object from AWS Secrets Manager
-     * 
+     *
      * @param secretName The name of the secret
      * @param clazz The class to deserialize the JSON to
      * @return The deserialized object
@@ -76,7 +76,7 @@ public class SecretsManagerUtil {
 
     /**
      * Get a secret as a Map from AWS Secrets Manager
-     * 
+     *
      * @param secretName The name of the secret
      * @return The secret as a Map
      */

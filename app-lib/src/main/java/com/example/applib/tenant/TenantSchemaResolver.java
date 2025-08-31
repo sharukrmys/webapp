@@ -11,7 +11,7 @@ public class TenantSchemaResolver {
             log.debug("Resolved tenant ID: {}", tenantId);
             return tenantId;
         }
-        
+
         log.debug("No tenant ID found in context, using default");
         return "default";
     }

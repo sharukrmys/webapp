@@ -33,14 +33,14 @@ public class MinioConfig {
                     .endpoint(endpoint)
                     .credentials(accessKey, secretKey)
                     .build();
-            
+
             // Check if bucket exists, create if it doesn't
             boolean bucketExists = minioClient.bucketExists(io.minio.BucketExistsArgs.builder().bucket(bucket).build());
             if (!bucketExists) {
                 minioClient.makeBucket(io.minio.MakeBucketArgs.builder().bucket(bucket).build());
                 log.info("Created Minio bucket: {}", bucket);
             }
-            
+
             return minioClient;
         } catch (Exception e) {
             log.error("Error initializing Minio client", e);

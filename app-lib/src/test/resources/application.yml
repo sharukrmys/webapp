@@ -1,13 +1,13 @@
 spring:
   application:
-    name: app-lib
+    name: app-lib-test
   cloud:
     openfeign:
       client:
         config:
           default:
-            connectTimeout: 5000
-            readTimeout: 5000
+            connectTimeout: 1000
+            readTimeout: 1000
             loggerLevel: full
 
 logging:

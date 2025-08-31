@@ -72,27 +72,27 @@ public class TenantController {
     public ResponseEntity<Map<String, Object>> testConnections() {
         // Set a tenant ID for testing
         TenantContext.setTenantId("test-tenant");
-        
+
         try {
             // Test master connection
             int masterCount = masterJdbcTemplate.queryForObject("SELECT COUNT(*) FROM master_tenant", Integer.class);
-            
+
             // Test tenant connection
             int tenantCount = tenantJdbcTemplate.queryForObject("SELECT 1", Integer.class);
-            
+
             // Test flex connection
             int flexCount = flexJdbcTemplate.queryForObject("SELECT 1", Integer.class);
-            
+
             // Test tac connection
             int tacCount = tacJdbcTemplate.queryForObject("SELECT 1", Integer.class);
-            
+
             Map<String, Object> results = Map.of(
                     "masterConnection", "Success: " + masterCount + " tenants found",
                     "tenantConnection", "Success: " + tenantCount,
                     "flexConnection", "Success: " + flexCount,
                     "tacConnection", "Success: " + tacCount
             );
-            
+
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             log.error("Error testing connections", e);

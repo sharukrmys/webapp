@@ -28,7 +28,7 @@ public class KafkaUtil {
 
     /**
      * Send a message to a Kafka topic asynchronously
-     * 
+     *
      * @param topic The topic name
      * @param key The message key
      * @param message The message payload
@@ -42,7 +42,7 @@ public class KafkaUtil {
 
         try {
             CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, key, message);
-            
+
             future.whenComplete((result, ex) -> {
                 if (ex == null) {
                     log.debug("Message sent successfully to topic: {}, partition: {}, offset: {}",
@@ -51,7 +51,7 @@ public class KafkaUtil {
                     log.error("Failed to send message to topic: {}", topic, ex);
                 }
             });
-            
+
             return future;
         } catch (Exception e) {
             log.error("Error sending message to Kafka topic: {}", topic, e);
@@ -61,7 +61,7 @@ public class KafkaUtil {
 
     /**
      * Send a message to a Kafka topic synchronously
-     * 
+     *
      * @param topic The topic name
      * @param key The message key
      * @param message The message payload
@@ -88,7 +88,7 @@ public class KafkaUtil {
 
     /**
      * Send a message to a Kafka topic with no key asynchronously
-     * 
+     *
      * @param topic The topic name
      * @param message The message payload
      * @return CompletableFuture of SendResult
@@ -99,7 +99,7 @@ public class KafkaUtil {
 
     /**
      * Send a message to a Kafka topic with no key synchronously
-     * 
+     *
      * @param topic The topic name
      * @param message The message payload
      * @return SendResult

@@ -17,7 +17,7 @@ public class TenantService {
 
     /**
      * Get a tenant by ID
-     * 
+     *
      * @param tenantId The tenant ID
      * @return Optional containing the tenant if found
      */
@@ -41,7 +41,7 @@ public class TenantService {
                         t.setAppstoredb(rs.getString("appstoredb"));
                         t.setDbProperties(rs.getString("db_properties"));
                         t.setIsActive(rs.getBoolean("isactive"));
-                        
+
                         // Handle nullable columns
                         if (rs.getObject("connectiontimeout") != null) {
                             t.setConnectionTimeout(rs.getLong("connectiontimeout"));
@@ -55,11 +55,11 @@ public class TenantService {
                         if (rs.getObject("minidle") != null) {
                             t.setMinIdle(rs.getInt("minidle"));
                         }
-                        
+
                         return t;
                     }
             );
-            
+
             return Optional.ofNullable(tenant);
         } catch (Exception e) {
             log.error("Error retrieving tenant: {}", tenantId, e);
@@ -69,7 +69,7 @@ public class TenantService {
 
     /**
      * Get all active tenants
-     * 
+     *
      * @return List of active tenants
      */
     public List<MasterTenant> getAllActiveTenants() {
@@ -91,7 +91,7 @@ public class TenantService {
                         t.setAppstoredb(rs.getString("appstoredb"));
                         t.setDbProperties(rs.getString("db_properties"));
                         t.setIsActive(rs.getBoolean("isactive"));
-                        
+
                         // Handle nullable columns
                         if (rs.getObject("connectiontimeout") != null) {
                             t.setConnectionTimeout(rs.getLong("connectiontimeout"));
@@ -105,7 +105,7 @@ public class TenantService {
                         if (rs.getObject("minidle") != null) {
                             t.setMinIdle(rs.getInt("minidle"));
                         }
-                        
+
                         return t;
                     }
             );
@@ -117,7 +117,7 @@ public class TenantService {
 
     /**
      * Create a new tenant
-     * 
+     *
      * @param tenant The tenant to create
      * @return true if successful, false otherwise
      */
@@ -144,7 +144,7 @@ public class TenantService {
                     tenant.getMaxPoolSize(),
                     tenant.getMinIdle()
             );
-            
+
             return result > 0;
         } catch (Exception e) {
             log.error("Error creating tenant: {}", tenant.getTenantId(), e);
@@ -154,7 +154,7 @@ public class TenantService {
 
     /**
      * Update an existing tenant
-     * 
+     *
      * @param tenant The tenant to update
      * @return true if successful, false otherwise
      */
@@ -182,7 +182,7 @@ public class TenantService {
                     tenant.getMinIdle(),
                     tenant.getTenantId()
             );
-            
+
             return result > 0;
         } catch (Exception e) {
             log.error("Error updating tenant: {}", tenant.getTenantId(), e);
@@ -192,7 +192,7 @@ public class TenantService {
 
     /**
      * Execute a query on a specific tenant's database
-     * 
+     *
      * @param tenantId The tenant ID
      * @param sql The SQL query
      * @param args The query arguments
@@ -201,7 +201,7 @@ public class TenantService {
     public List<Map<String, Object>> executeQuery(String tenantId, String sql, Object... args) {
         // Set the tenant context
         TenantContext.setTenantId(tenantId);
-        
+
         try {
             // Use the tenant-specific JDBC template
             JdbcTemplate tenantJdbcTemplate = new JdbcTemplate(new TenantAwareDataSource("tac"));

@@ -32,7 +32,7 @@ public class MinioUtil {
 
     /**
      * Upload a file to Minio
-     * 
+     *
      * @param objectName The object name
      * @param content The file content as byte array
      * @param contentType The content type (MIME type)
@@ -62,7 +62,7 @@ public class MinioUtil {
 
     /**
      * Download a file from Minio
-     * 
+     *
      * @param objectName The object name
      * @return The file content as byte array
      */
@@ -84,7 +84,7 @@ public class MinioUtil {
 
     /**
      * Stream a file from Minio (memory efficient for large files)
-     * 
+     *
      * @param objectName The object name
      * @return InputStream for the object
      */
@@ -104,7 +104,7 @@ public class MinioUtil {
 
     /**
      * Delete a file from Minio
-     * 
+     *
      * @param objectName The object name
      */
     public void deleteFile(String objectName) {
@@ -124,7 +124,7 @@ public class MinioUtil {
 
     /**
      * List files in a Minio prefix
-     * 
+     *
      * @param prefix The prefix
      * @return List of object names
      */
@@ -153,7 +153,7 @@ public class MinioUtil {
 
     /**
      * Generate a pre-signed URL for downloading a file
-     * 
+     *
      * @param objectName The object name
      * @param expirationInMinutes URL expiration time in minutes
      * @return Pre-signed URL as string
@@ -176,7 +176,7 @@ public class MinioUtil {
 
     /**
      * Generate a pre-signed URL for uploading a file
-     * 
+     *
      * @param objectName The object name
      * @param contentType The content type (MIME type)
      * @param expirationInMinutes URL expiration time in minutes

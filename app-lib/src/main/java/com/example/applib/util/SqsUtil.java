@@ -29,7 +29,7 @@ public class SqsUtil {
 
     /**
      * Send a message to an SQS queue
-     * 
+     *
      * @param queueUrl The queue URL
      * @param message The message object (will be serialized to JSON)
      * @return The message ID
@@ -42,7 +42,7 @@ public class SqsUtil {
 
         try {
             String messageBody = gson.toJson(message);
-            
+
             SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .messageBody(messageBody)
@@ -59,7 +59,7 @@ public class SqsUtil {
 
     /**
      * Send a message to an SQS queue with attributes
-     * 
+     *
      * @param queueUrl The queue URL
      * @param message The message object (will be serialized to JSON)
      * @param attributes The message attributes
@@ -73,7 +73,7 @@ public class SqsUtil {
 
         try {
             String messageBody = gson.toJson(message);
-            
+
             SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .messageBody(messageBody)
@@ -91,7 +91,7 @@ public class SqsUtil {
 
     /**
      * Send a message to an SQS queue with delay
-     * 
+     *
      * @param queueUrl The queue URL
      * @param message The message object (will be serialized to JSON)
      * @param delaySeconds The delay in seconds
@@ -105,7 +105,7 @@ public class SqsUtil {
 
         try {
             String messageBody = gson.toJson(message);
-            
+
             SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .messageBody(messageBody)
@@ -123,7 +123,7 @@ public class SqsUtil {
 
     /**
      * Receive messages from an SQS queue
-     * 
+     *
      * @param queueUrl The queue URL
      * @param maxMessages The maximum number of messages to receive
      * @param waitTimeSeconds The wait time in seconds
@@ -153,7 +153,7 @@ public class SqsUtil {
 
     /**
      * Delete a message from an SQS queue
-     * 
+     *
      * @param queueUrl The queue URL
      * @param receiptHandle The receipt handle
      */
@@ -179,7 +179,7 @@ public class SqsUtil {
 
     /**
      * Delete multiple messages from an SQS queue
-     * 
+     *
      * @param queueUrl The queue URL
      * @param messages The messages to delete
      */
@@ -212,7 +212,7 @@ public class SqsUtil {
 
     /**
      * Get the URL of an SQS queue by name
-     * 
+     *
      * @param queueName The queue name
      * @return The queue URL
      */
@@ -237,7 +237,7 @@ public class SqsUtil {
 
     /**
      * Create an SQS queue
-     * 
+     *
      * @param queueName The queue name
      * @param attributes The queue attributes
      * @return The queue URL

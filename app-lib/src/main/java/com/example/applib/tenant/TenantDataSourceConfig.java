@@ -45,15 +45,15 @@ public class TenantDataSourceConfig {
 
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
-        
+
         Map<String, Object> properties = new HashMap<>();
         properties.put("hibernate.hbm2ddl.auto", "update");
         properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         properties.put("hibernate.show_sql", "true");
         properties.put("hibernate.format_sql", "true");
-        
+
         em.setJpaPropertyMap(properties);
-        
+
         return em;
     }
 
@@ -148,10 +148,10 @@ public class TenantDataSourceConfig {
     @PostConstruct
     public void loadTenants() {
         log.info("Loading all tenants from the master database");
-        
+
         Iterable<MasterTenant> tenants = masterTenantRepository.findByIsActiveTrue();
         Map<Object, Object> tenantDataSources = new HashMap<>();
-        
+
         for (MasterTenant tenant : tenants) {
             try {
                 DataSource dataSource = createDataSource(tenant);
@@ -161,11 +161,11 @@ public class TenantDataSourceConfig {
                 log.error("Error loading tenant: {}", tenant.getTenantId(), e);
             }
         }
-        
+
         TenantRoutingDataSource tenantRoutingDataSource = tenantRoutingDataSource();
         tenantRoutingDataSource.setTargetDataSources(tenantDataSources);
         tenantRoutingDataSource.afterPropertiesSet();
-        
+
         log.info("Loaded {} active tenants", tenantDataSources.size());
     }
 
@@ -176,29 +176,29 @@ public class TenantDataSourceConfig {
             dataSource.setJdbcUrl(tenant.getUrl());
             dataSource.setUsername(tenant.getUsername());
             dataSource.setPassword(tenant.getPassword());
-            
+
             // Parse DB properties from JSON string
             if (tenant.getDbProperties() != null && !tenant.getDbProperties().isEmpty()) {
                 Map<String, Object> dbProps = objectMapper.readValue(tenant.getDbProperties(), Map.class);
-                
+
                 if (dbProps.containsKey("connectionTimeout") && tenant.getConnectionTimeout() == null) {
                     dataSource.setConnectionTimeout(Long.parseLong(dbProps.get("connectionTimeout").toString()));
                 } else if (tenant.getConnectionTimeout() != null) {
                     dataSource.setConnectionTimeout(tenant.getConnectionTimeout());
                 }
-                
+
                 if (dbProps.containsKey("idleTimeout") && tenant.getIdleTimeout() == null) {
                     dataSource.setIdleTimeout(Long.parseLong(dbProps.get("idleTimeout").toString()));
                 } else if (tenant.getIdleTimeout() != null) {
                     dataSource.setIdleTimeout(tenant.getIdleTimeout());
                 }
-                
+
                 if (dbProps.containsKey("maxPoolSize") && tenant.getMaxPoolSize() == null) {
                     dataSource.setMaximumPoolSize(Integer.parseInt(dbProps.get("maxPoolSize").toString()));
                 } else if (tenant.getMaxPoolSize() != null) {
                     dataSource.setMaximumPoolSize(tenant.getMaxPoolSize());
                 }
-                
+
                 if (dbProps.containsKey("minIdle") && tenant.getMinIdle() == null) {
                     dataSource.setMinimumIdle(Integer.parseInt(dbProps.get("minIdle").toString()));
                 } else if (tenant.getMinIdle() != null) {
@@ -212,7 +212,7 @@ public class TenantDataSourceConfig {
                 dataSource.setMaximumPoolSize(10);
                 dataSource.setMinimumIdle(5);
             }
-            
+
             return dataSource;
         } catch (Exception e) {
             log.error("Error creating data source for tenant: {}", tenant.getTenantId(), e);

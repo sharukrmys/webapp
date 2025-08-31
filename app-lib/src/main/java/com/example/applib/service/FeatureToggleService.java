@@ -1,11 +1,9 @@
 package com.example.applib.service;
 
-import org.springframework.stereotype.Service;
-
 import com.example.applib.config.FeatureToggleConfig;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 /**
  * Service to check if features are enabled.
@@ -20,7 +18,7 @@ public class FeatureToggleService {
 
     /**
      * Check if Kafka is enabled.
-     * 
+     *
      * @return true if Kafka is enabled, false otherwise
      */
     public boolean isKafkaEnabled() {
@@ -31,7 +29,7 @@ public class FeatureToggleService {
 
     /**
      * Check if Redis is enabled.
-     * 
+     *
      * @return true if Redis is enabled, false otherwise
      */
     public boolean isRedisEnabled() {
@@ -42,7 +40,7 @@ public class FeatureToggleService {
 
     /**
      * Check if S3 is enabled.
-     * 
+     *
      * @return true if S3 is enabled, false otherwise
      */
     public boolean isS3Enabled() {
@@ -53,7 +51,7 @@ public class FeatureToggleService {
 
     /**
      * Check if SQS is enabled.
-     * 
+     *
      * @return true if SQS is enabled, false otherwise
      */
     public boolean isSqsEnabled() {
@@ -64,7 +62,7 @@ public class FeatureToggleService {
 
     /**
      * Check if Secrets Manager is enabled.
-     * 
+     *
      * @return true if Secrets Manager is enabled, false otherwise
      */
     public boolean isSecretsManagerEnabled() {
@@ -73,4 +71,3 @@ public class FeatureToggleService {
         return enabled;
     }
 }
-

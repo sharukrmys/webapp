@@ -26,14 +26,14 @@ public class InterServiceCommunicationService {
         try {
             // Get user details
             ResponseEntity<Map<String, Object>> userResponse = userManagementServiceClient.getUserById(userId);
-            
+
             if (!userResponse.getStatusCode().is2xxSuccessful() || userResponse.getBody() == null) {
                 log.error("Failed to get user with ID: {}", userId);
                 return Optional.empty();
             }
-            
+
             Map<String, Object> userData = userResponse.getBody();
-            
+
             // Get user's data
             try {
                 ResponseEntity<List<Map<String, Object>>> dataResponse = dataServiceClient.getAllData();
@@ -46,7 +46,7 @@ public class InterServiceCommunicationService {
                 log.error("Error fetching data for user {}: {}", userId, e.getMessage());
                 userData.put("data", Collections.emptyList());
             }
-            
+
             // Get user's attachments
             try {
                 ResponseEntity<List<Map<String, Object>>> attachmentsResponse = attachmentServiceClient.getAllAttachments();
@@ -59,9 +59,9 @@ public class InterServiceCommunicationService {
                 log.error("Error fetching attachments for user {}: {}", userId, e.getMessage());
                 userData.put("attachments", Collections.emptyList());
             }
-            
+
             return Optional.of(userData);
-            
+
         } catch (FeignException e) {
             log.error("Error in inter-service communication: {}", e.getMessage());
             return Optional.empty();
@@ -72,18 +72,18 @@ public class InterServiceCommunicationService {
         try {
             // Create user
             ResponseEntity<Map<String, Object>> userResponse = userManagementServiceClient.createUser(userData);
-            
+
             if (!userResponse.getStatusCode().is2xxSuccessful() || userResponse.getBody() == null) {
                 log.error("Failed to create user");
                 return false;
             }
-            
+
             Map<String, Object> createdUser = userResponse.getBody();
             String userId = createdUser.get("id").toString();
-            
+
             // Add user ID to data record
             dataRecord.put("userId", userId);
-            
+
             // Create data record
             try {
                 ResponseEntity<Map<String, Object>> dataResponse = dataServiceClient.createData(dataRecord);
@@ -97,9 +97,9 @@ public class InterServiceCommunicationService {
                 // Consider rolling back user creation here
                 return false;
             }
-            
+
             return true;
-            
+
         } catch (FeignException e) {
             log.error("Error in inter-service communication: {}", e.getMessage());
             return false;

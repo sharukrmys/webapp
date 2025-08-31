@@ -52,13 +52,13 @@ public class AwsConfig {
         // Default to instance profile credentials (EC2/EKS/K8s)
         if (useInstanceProfile) {
             return DefaultCredentialsProvider.create();
-        } 
+        }
         // Use explicit credentials if provided
         else if (accessKey != null && !accessKey.isEmpty() && secretKey != null && !secretKey.isEmpty()) {
             return StaticCredentialsProvider.create(
                     AwsBasicCredentials.create(accessKey, secretKey)
             );
-        } 
+        }
         // Fall back to profile credentials
         else {
             return ProfileCredentialsProvider.create(awsProfile);
@@ -81,11 +81,10 @@ public class AwsConfig {
             return StaticCredentialsProvider.create(
                     AwsBasicCredentials.create(accessKey, secretKey)
             );
-        } 
+        }
         // Fall back to profile credentials
         else {
             return ProfileCredentialsProvider.create(awsProfile);
         }
     }
 }
-

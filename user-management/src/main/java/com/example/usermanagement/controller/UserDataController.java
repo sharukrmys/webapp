@@ -25,19 +25,19 @@ public class UserDataController {
     @PostMapping
     public ResponseEntity<String> createUserWithData(
             @RequestBody Map<String, Object> request) {
-        
+
         @SuppressWarnings("unchecked")
         Map<String, Object> userData = (Map<String, Object>) request.get("user");
-        
+
         @SuppressWarnings("unchecked")
         Map<String, Object> dataRecord = (Map<String, Object>) request.get("data");
-        
+
         if (userData == null || dataRecord == null) {
             return ResponseEntity.badRequest().body("Both 'user' and 'data' are required");
         }
-        
+
         boolean success = interServiceCommunicationService.createUserWithData(userData, dataRecord);
-        
+
         if (success) {
             return ResponseEntity.ok("User and data created successfully");
         } else {
