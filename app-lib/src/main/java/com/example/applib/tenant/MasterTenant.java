@@ -1,38 +1,46 @@
 package com.example.applib.tenant;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entity representing a master tenant.
+ */
 @Data
 @Entity
-@Table(name = "master_tenant")
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "master_tenant")
 public class MasterTenant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id")
+    @Column(name = "tenant_id", nullable = false, unique = true)
     private String tenantId;
 
-    @Column(name = "url")
+    @Column(name = "url", nullable = false)
     private String url;
 
-    @Column(name = "username")
+    @Column(name = "username", nullable = false)
     private String username;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "dialect")
+    @Column(name = "dialect", nullable = false)
     private String dialect;
 
-    @Column(name = "version")
-    private int version;
+    @Column(name = "version", nullable = false)
+    private Integer version;
 
     @Column(name = "flexdb")
     private String flexdb;
@@ -50,7 +58,7 @@ public class MasterTenant {
     private String dbProperties;
 
     @Column(name = "isactive")
-    private Boolean isActive = true;
+    private Boolean isactive = true;
 
     @Column(name = "connectiontimeout")
     private Long connectionTimeout;
@@ -63,4 +71,13 @@ public class MasterTenant {
 
     @Column(name = "minidle")
     private Integer minIdle;
+
+    /**
+     * Checks if the tenant is active.
+     *
+     * @return True if the tenant is active, false otherwise
+     */
+    public boolean isActive() {
+        return isactive != null && isactive;
+    }
 }

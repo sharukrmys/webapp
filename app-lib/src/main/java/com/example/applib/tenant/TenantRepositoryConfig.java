@@ -18,4 +18,3 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 public class TenantRepositoryConfig {
     // Configuration class to enable JPA repositories for tenant package
 }
-

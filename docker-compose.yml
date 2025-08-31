@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15-alpine
     container_name: postgres
     ports:
       - "5432:5432"
@@ -13,24 +13,31 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    networks:
+      - app-network
 
   redis:
     image: redis:7-alpine
     container_name: redis
     ports:
       - "6379:6379"
+    networks:
+      - app-network
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,sqs,secretsmanager
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
     volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./scripts/init-localstack.sh:/docker-entrypoint-initdb.d/init-localstack.sh
+      - localstack-data:/tmp/localstack/data
+    networks:
+      - app-network
 
   minio:
     image: minio/minio:latest
@@ -41,17 +48,120 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+    networks:
+      - app-network
+
+  metadata:
+    build:
+      context: .
+      dockerfile: metadata/Dockerfile
+    container_name: metadata
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+    depends_on:
+      - postgres
+      - redis
+      - localstack
+      - minio
+    networks:
+      - app-network
+
+  data:
+    build:
+      context: .
+      dockerfile: data/Dockerfile
+    container_name: data
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+    depends_on:
+      - postgres
+      - redis
+      - localstack
+      - minio
+    networks:
+      - app-network
+
+  attachment:
+    build:
+      context: .
+      dockerfile: attachment/Dockerfile
+    container_name: attachment
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+    depends_on:
+      - postgres
+      - redis
+      - localstack
+      - minio
+    networks:
+      - app-network
+
+  user-management:
+    build:
+      context: .
+      dockerfile: user-management/Dockerfile
+    container_name: user-management
+    ports:
+      - "8084:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+    depends_on:
+      - postgres
+      - redis
+      - localstack
+      - minio
+    networks:
+      - app-network
+
+  report:
+    build:
+      context: .
+      dockerfile: report/Dockerfile
+    container_name: report
+    ports:
+      - "8085:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+    depends_on:
+      - postgres
+      - redis
+      - localstack
+      - minio
+    networks:
+      - app-network
+
+  audit:
+    build:
+      context: .
+      dockerfile: audit/Dockerfile
+    container_name: audit
+    ports:
+      - "8086:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+    depends_on:
+      - postgres
+      - redis
+      - localstack
+      - minio
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres-data:
-  redis-data:
+  localstack-data:
   minio-data:
 

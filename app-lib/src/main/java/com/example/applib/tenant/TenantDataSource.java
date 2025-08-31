@@ -1,32 +1,38 @@
 package com.example.applib.tenant;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.sql.DataSource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * Component for managing tenant data sources.
+ */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class TenantDataSource {
 
-    private final Map<String, DataSource> dataSources = new HashMap<>();
     private final MasterTenantRepository masterTenantRepository;
-    private final ObjectMapper objectMapper;
+    private final TenantDataSourceConfig tenantDataSourceConfig;
 
-    @Autowired
-    public TenantDataSource(MasterTenantRepository masterTenantRepository,
-                           @Qualifier("objectMapper") ObjectMapper objectMapper) {
-        this.masterTenantRepository = masterTenantRepository;
-        this.objectMapper = objectMapper;
-    }
+    private final Map<String, DataSource> dataSources = new HashMap<>();
 
+    @Value("${tenant.default-tenant:default}")
+    private String defaultTenant;
+
+    /**
+     * Gets the data source for a specific tenant.
+     *
+     * @param tenantId The tenant ID
+     * @return The data source for the tenant
+     */
     public DataSource getDataSource(String tenantId) {
         if (dataSources.containsKey(tenantId)) {
             return dataSources.get(tenantId);
@@ -40,86 +46,92 @@ public class TenantDataSource {
         return dataSource;
     }
 
+    /**
+     * Gets the default data source.
+     *
+     * @return The default data source
+     */
+    public DataSource getDefaultDataSource() {
+        // Create a default data source if it doesn't exist
+        if (!dataSources.containsKey(defaultTenant)) {
+            DataSource defaultDataSource = createDefaultDataSource();
+            dataSources.put(defaultTenant, defaultDataSource);
+        }
+
+        return dataSources.get(defaultTenant);
+    }
+
+    /**
+     * Creates a data source for a specific tenant.
+     *
+     * @param tenantId The tenant ID
+     * @return The data source for the tenant
+     */
     private DataSource createDataSource(String tenantId) {
-        Optional<MasterTenant> masterTenantOpt = masterTenantRepository.findByTenantIdAndIsActiveTrue(tenantId);
-
-        if (masterTenantOpt.isEmpty()) {
-            log.error("No active tenant found with ID: {}", tenantId);
-            return null;
+        Optional<MasterTenant> masterTenantOpt = masterTenantRepository.findByTenantId(tenantId);
+        if (masterTenantOpt.isPresent()) {
+            return tenantDataSourceConfig.createAndConfigureDataSource(masterTenantOpt.get());
         }
 
-        MasterTenant masterTenant = masterTenantOpt.get();
+        log.warn("Tenant {} not found in master database", tenantId);
+        return getDefaultDataSource();
+    }
 
-        try {
-            HikariConfig config = new HikariConfig();
-            config.setJdbcUrl(masterTenant.getUrl());
-            config.setUsername(masterTenant.getUsername());
-            config.setPassword(masterTenant.getPassword());
-            config.setDriverClassName("org.postgresql.Driver");
-            config.setPoolName(tenantId + "-hikari-pool");
+    /**
+     * Creates a default data source.
+     *
+     * @return The default data source
+     */
+    private DataSource createDefaultDataSource() {
+        // Try to find the default tenant in the master database
+        Optional<MasterTenant> defaultMasterTenantOpt = masterTenantRepository.findByTenantId(defaultTenant);
+        if (defaultMasterTenantOpt.isPresent()) {
+            return tenantDataSourceConfig.createAndConfigureDataSource(defaultMasterTenantOpt.get());
+        }
 
-            // Parse and apply DB properties from JSON
-            if (masterTenant.getDbProperties() != null) {
-                try {
-                    Map<String, Object> props = objectMapper.readValue(masterTenant.getDbProperties(), Map.class);
+        // If the default tenant is not found, create a dummy data source
+        log.warn("Default tenant {} not found in master database, creating dummy data source", defaultTenant);
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl("jdbc:h2:mem:default");
+        ds.setUsername("sa");
+        ds.setPassword("");
+        ds.setDriverClassName("org.h2.Driver");
+        ds.setPoolName("DefaultHikariPool");
+        return ds;
+    }
 
-                    if (props.containsKey("minIdle") && props.get("minIdle") != null) {
-                        config.setMinimumIdle(Integer.parseInt(props.get("minIdle").toString()));
-                    } else if (masterTenant.getMinIdle() != null) {
-                        config.setMinimumIdle(masterTenant.getMinIdle());
-                    } else {
-                        config.setMinimumIdle(1);
-                    }
+    /**
+     * Gets all tenant IDs.
+     *
+     * @return A list of all tenant IDs
+     */
+    public List<String> getAllTenantIds() {
+        return masterTenantRepository.findAll().stream()
+                .map(MasterTenant::getTenantId)
+                .toList();
+    }
 
-                    if (props.containsKey("maxPoolSize") && props.get("maxPoolSize") != null) {
-                        config.setMaximumPoolSize(Integer.parseInt(props.get("maxPoolSize").toString()));
-                    } else if (masterTenant.getMaxPoolSize() != null) {
-                        config.setMaximumPoolSize(masterTenant.getMaxPoolSize());
-                    } else {
-                        config.setMaximumPoolSize(3);
-                    }
+    /**
+     * Resets the data source for a specific tenant.
+     *
+     * @param tenantId The tenant ID
+     */
+    public void resetDataSource(String tenantId) {
+        DataSource dataSource = dataSources.remove(tenantId);
+        if (dataSource instanceof HikariDataSource) {
+            ((HikariDataSource) dataSource).close();
+        }
+    }
 
-                    if (props.containsKey("connectionTimeout") && props.get("connectionTimeout") != null) {
-                        config.setConnectionTimeout(Long.parseLong(props.get("connectionTimeout").toString()) * 1000);
-                    } else if (masterTenant.getConnectionTimeout() != null) {
-                        config.setConnectionTimeout(masterTenant.getConnectionTimeout() * 1000);
-                    } else {
-                        config.setConnectionTimeout(30000);
-                    }
-
-                    if (props.containsKey("idleTimeout") && props.get("idleTimeout") != null) {
-                        config.setIdleTimeout(Long.parseLong(props.get("idleTimeout").toString()) * 1000);
-                    } else if (masterTenant.getIdleTimeout() != null) {
-                        config.setIdleTimeout(masterTenant.getIdleTimeout() * 1000);
-                    } else {
-                        config.setIdleTimeout(600000);
-                    }
-
-                } catch (Exception e) {
-                    log.error("Error parsing DB properties for tenant {}: {}", tenantId, e.getMessage());
-                    // Use default values if parsing fails
-                    config.setMinimumIdle(1);
-                    config.setMaximumPoolSize(3);
-                    config.setConnectionTimeout(30000);
-                    config.setIdleTimeout(600000);
-                }
-            } else {
-                // Use values from individual fields if available, otherwise use defaults
-                config.setMinimumIdle(masterTenant.getMinIdle() != null ? masterTenant.getMinIdle() : 1);
-                config.setMaximumPoolSize(masterTenant.getMaxPoolSize() != null ? masterTenant.getMaxPoolSize() : 3);
-                config.setConnectionTimeout(masterTenant.getConnectionTimeout() != null ? masterTenant.getConnectionTimeout() * 1000 : 30000);
-                config.setIdleTimeout(masterTenant.getIdleTimeout() != null ? masterTenant.getIdleTimeout() * 1000 : 600000);
+    /**
+     * Resets all data sources.
+     */
+    public void resetAllDataSources() {
+        dataSources.forEach((tenantId, dataSource) -> {
+            if (dataSource instanceof HikariDataSource) {
+                ((HikariDataSource) dataSource).close();
             }
-
-            config.setMaxLifetime(1800000); // 30 minutes
-            config.setAutoCommit(true);
-            config.setConnectionTestQuery("SELECT 1");
-
-            return new HikariDataSource(config);
-
-        } catch (Exception e) {
-            log.error("Error creating data source for tenant {}: {}", tenantId, e.getMessage());
-            return null;
-        }
+        });
+        dataSources.clear();
     }
 }

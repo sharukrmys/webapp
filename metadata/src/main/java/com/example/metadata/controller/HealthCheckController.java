@@ -2,15 +2,14 @@ package com.example.metadata.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/health")
@@ -32,7 +31,7 @@ public class HealthCheckController {
         response.put("application", applicationName);
         response.put("profile", activeProfile);
         response.put("timestamp", System.currentTimeMillis());
-        
+
         return ResponseEntity.ok(response);
     }
 
@@ -44,14 +43,14 @@ public class HealthCheckController {
             @Value("${features.s3.enabled:false}") boolean s3Enabled,
             @Value("${features.sqs.enabled:false}") boolean sqsEnabled,
             @Value("${features.secretsmanager.enabled:false}") boolean secretsManagerEnabled) {
-        
+
         Map<String, Object> features = new HashMap<>();
         features.put("redis", redisEnabled);
         features.put("kafka", kafkaEnabled);
         features.put("s3", s3Enabled);
         features.put("sqs", sqsEnabled);
         features.put("secretsManager", secretsManagerEnabled);
-        
+
         return ResponseEntity.ok(features);
     }
 
@@ -61,20 +60,19 @@ public class HealthCheckController {
             @Value("${spring.data.redis.host:localhost}") String redisHost,
             @Value("${spring.data.redis.port:6379}") int redisPort,
             @Value("${aws.region:us-east-1}") String awsRegion) {
-        
+
         Map<String, Object> config = new HashMap<>();
-        
+
         Map<String, Object> redis = new HashMap<>();
         redis.put("host", redisHost);
         redis.put("port", redisPort);
-        
+
         Map<String, Object> aws = new HashMap<>();
         aws.put("region", awsRegion);
-        
+
         config.put("redis", redis);
         config.put("aws", aws);
-        
+
         return ResponseEntity.ok(config);
     }
 }
-

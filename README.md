@@ -1,46 +1,45 @@
-# Multi-Module Spring Boot Project
+# Multi-Module Spring Boot Application
 
-This is a multi-module Spring Boot project with Java 21 compatibility, Spring Boot 3.5.3, and Spring Cloud 2025.0.0.
-
-## Project Structure
-
-```
-multi-module-spring-boot/
-├── app-lib/           # Common library module used by all other modules
-├── data/              # Data service module
-├── attachment/        # Attachment service module
-├── metadata/          # Metadata service module
-├── user-management/   # User Management service module
-├── report/            # Report service module
-└── audit/             # Audit service module
-```
+This is a multi-tenant Spring Boot application with multiple modules for different functionalities.
 
 ## Technology Stack
 
-- Java 21.0.8
-- Spring Boot 3.5.3
-- Spring Cloud 2025.0.0
+- Java 17 (with support for Java 21 in production)
+- Spring Boot 3.2.5
+- Spring Cloud 2023.0.0
 - Gradle 8.5
 - PostgreSQL
 - Redis (Cache, Queue, Pub/Sub)
 - AWS Services (SQS, S3, Secrets Manager)
 - Minio
 - Nimbus JOSE JWT
+- Guava
+
+## Project Structure
+
+The project is organized into the following modules:
+
+- **app-lib**: Common library module used by all other modules
+- **data**: Data access module
+- **attachment**: File handling module
+- **metadata**: Metadata management module
+- **user-management**: User authentication and authorization module
+- **report**: Reporting module
+- **audit**: Audit logging module
 
 ## Multi-Tenant Architecture
 
-The project uses a multi-tenant architecture where a master tenant table contains database details for each tenant. The system dynamically selects the appropriate database based on the tenant ID in the request.
+The application uses a multi-tenant architecture where each tenant has its own database. The master tenant table contains the database connection details for each tenant:
 
-Master tenant table structure:
 ```sql
 CREATE TABLE public.master_tenant (
     id bigserial NOT NULL,
     dialect varchar(255) NULL,
-    password varchar(30) NULL,
+    "password" varchar(30) NULL,
     tenant_id varchar(30) NULL,
     url varchar(256) NULL,
     username varchar(30) NULL,
-    version int4 NOT NULL,
+    "version" int4 NOT NULL,
     flexdb varchar(255) NULL,
     procedures_filename varchar(255) DEFAULT 'procedures.sql'::character varying NULL,
     readdb varchar NULL,
@@ -57,53 +56,112 @@ CREATE TABLE public.master_tenant (
 
 ## Environment Configuration
 
-The project includes environment-specific configuration files in the app-lib module:
-- local-application.yml
-- dev-application.yml
-- qa-application.yml
-- prod-application.yml
+The application supports different environments with specific configurations:
 
-These configurations include options to disable Kafka and Redis when running in local mode.
+- **Local**: Development environment with disabled Redis/Kafka and local AWS services
+- **Dev**: Development environment with enabled services
+- **QA**: Testing environment
+- **Prod**: Production environment
 
-## Building the Project
+Configuration files are located in the app-lib module:
 
-```bash
-# Build the project
-./gradlew clean build
-
-# Run tests
-./gradlew test
-
-# Build without running tests
-./gradlew clean build -x test
-```
-
-## Java Version
-
-The project is configured to use Java 21.0.8. A `.java-version` file is included for tools like jenv or sdkman.
-
-If you need to build with a different Java version, you can modify the `sourceCompatibility` and `targetCompatibility` settings in the `build.gradle` file.
+- `application.yml`: Common configuration
+- `application-local.yml`: Local environment configuration
+- `application-dev.yml`: Development environment configuration
+- `application-qa.yml`: QA environment configuration
+- `application-prod.yml`: Production environment configuration
 
 ## Feature Toggles
 
-The project includes feature toggles to enable/disable certain components:
-- Redis: `spring.redis.enabled=true/false`
-- Kafka: `spring.kafka.enabled=true/false`
-- AWS Services: `aws.enabled=true/false`
-- AWS S3: `aws.s3.enabled=true/false`
-- AWS SQS: `aws.sqs.enabled=true/false`
-- AWS Secrets Manager: `aws.secretsmanager.enabled=true/false`
+The application supports feature toggles to enable/disable specific features in different environments:
 
-## Dependencies
+- Redis cache and messaging
+- Kafka event streaming
+- AWS S3 storage
+- AWS SQS messaging
+- Minio object storage
+- Secrets Manager
 
-The project uses the following key dependencies:
-- Spring Boot Starters (Web, Data JPA, Redis, Cache, Validation, Actuator)
-- Spring Cloud OpenFeign for service-to-service communication
-- PostgreSQL and HikariCP for database connectivity
-- Redisson for Redis operations
-- AWS SDK v2 for AWS services
-- Minio for S3-compatible storage
-- Guava for utility functions
-- Nimbus JOSE JWT for JWT handling
-- Apache POI and DocX4j for document processing
+## Building and Running
+
+### Prerequisites
+
+- Java 17 or higher
+- PostgreSQL
+- Redis (optional, can be disabled in local mode)
+- AWS services (optional, can be disabled in local mode)
+
+### Build
+
+```bash
+./gradlew clean build
+```
+
+### Run
+
+```bash
+./gradlew bootRun --args='--spring.profiles.active=local'
+```
+
+## Module Descriptions
+
+### app-lib
+
+Common library module containing:
+
+- Multi-tenant configuration
+- Database connection management
+- Feature toggle configuration
+- Common utilities
+- Environment-specific configurations
+
+### data
+
+Data access module for:
+
+- Database operations
+- Data models
+- Repositories
+- Data services
+
+### attachment
+
+File handling module for:
+
+- File upload/download
+- File storage (S3/Minio)
+- File metadata
+
+### metadata
+
+Metadata management module for:
+
+- Tenant management
+- System metadata
+- Configuration management
+
+### user-management
+
+User management module for:
+
+- Authentication
+- Authorization
+- User profiles
+- Role management
+
+### report
+
+Reporting module for:
+
+- Report generation
+- Data export
+- Scheduled reports
+
+### audit
+
+Audit logging module for:
+
+- Activity logging
+- Audit trails
+- Compliance reporting
 

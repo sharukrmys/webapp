@@ -2,6 +2,8 @@ package com.example.applib.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManagerFactory;
+import java.util.Properties;
+import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -14,9 +16,6 @@ import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
-
-import javax.sql.DataSource;
-import java.util.Properties;
 
 /**
  * Configuration class for the master database that stores tenant information.
@@ -62,10 +61,10 @@ public class MasterDatabaseConfig {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(masterDataSource());
         em.setPackagesToScan("com.example.applib.tenant");
-        
+
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
-        
+
         Properties properties = new Properties();
         properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
         properties.put("hibernate.hbm2ddl.auto", "update");
@@ -73,7 +72,7 @@ public class MasterDatabaseConfig {
         properties.put("hibernate.show_sql", "false");
         properties.put("hibernate.jdbc.lob.non_contextual_creation", "true");
         em.setJpaProperties(properties);
-        
+
         return em;
     }
 
@@ -88,4 +87,3 @@ public class MasterDatabaseConfig {
         return transactionManager;
     }
 }
-

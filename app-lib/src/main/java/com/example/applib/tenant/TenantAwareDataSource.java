@@ -1,143 +1,116 @@
 package com.example.applib.tenant;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariDataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.sql.DataSource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.datasource.AbstractDataSource;
-import org.springframework.jdbc.datasource.lookup.DataSourceLookupFailureException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+/**
+ * Component for managing tenant-aware data sources.
+ */
 @Slf4j
-public class TenantAwareDataSource extends AbstractDataSource {
+@Component
+@RequiredArgsConstructor
+public class TenantAwareDataSource {
 
-    private final String dbType;
-    private final Map<String, DataSource> tenantDataSources = new ConcurrentHashMap<>();
+    private final MasterTenantRepository masterTenantRepository;
+    private final Map<String, DataSource> tenantDataSources = new HashMap<>();
 
-    @Autowired
-    private MasterTenantRepository masterTenantRepository;
+    @Value("${tenant.default-tenant:default}")
+    private String defaultTenant;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    public TenantAwareDataSource(String dbType) {
-        this.dbType = dbType;
-    }
-
-    @Override
-    public Connection getConnection() throws SQLException {
-        return lookupDataSource().getConnection();
-    }
-
-    @Override
-    public Connection getConnection(String username, String password) throws SQLException {
-        return lookupDataSource().getConnection(username, password);
-    }
-
-    private DataSource lookupDataSource() {
-        String tenantId = TenantContext.getTenantId();
-        if (tenantId == null) {
-            throw new DataSourceLookupFailureException("No tenant ID found in context");
+    /**
+     * Gets the data source for a specific tenant.
+     *
+     * @param tenantId The tenant ID
+     * @return The data source for the tenant
+     */
+    public DataSource getDataSource(String tenantId) {
+        if (tenantDataSources.containsKey(tenantId)) {
+            return tenantDataSources.get(tenantId);
         }
 
-        // Check if we already have a data source for this tenant and db type
-        String key = tenantId + "-" + dbType;
-        if (tenantDataSources.containsKey(key)) {
-            return tenantDataSources.get(key);
+        DataSource dataSource = createDataSource(tenantId);
+        if (dataSource != null) {
+            tenantDataSources.put(tenantId, dataSource);
         }
 
-        // Otherwise, create a new data source
-        DataSource dataSource = createDataSourceForTenant(tenantId);
-        tenantDataSources.put(key, dataSource);
         return dataSource;
     }
 
-    private DataSource createDataSourceForTenant(String tenantId) {
+    /**
+     * Creates a data source for a specific tenant.
+     *
+     * @param tenantId The tenant ID
+     * @return The data source for the tenant
+     */
+    private DataSource createDataSource(String tenantId) {
         try {
-            // Get the tenant from the repository
-            Optional<MasterTenant> optionalTenant = masterTenantRepository.findByTenantIdAndIsActiveTrue(tenantId);
+            // Find the tenant in the master database
+            Optional<MasterTenant> optionalTenant = masterTenantRepository.findByTenantId(tenantId);
 
-            if (optionalTenant.isEmpty()) {
-                throw new DataSourceLookupFailureException("Tenant not found or not active: " + tenantId);
-            }
+            if (optionalTenant.isPresent() && optionalTenant.get().isActive()) {
+                MasterTenant tenant = optionalTenant.get();
 
-            MasterTenant tenant = optionalTenant.get();
+                // Create a new data source for the tenant
+                HikariDataSource dataSource = new HikariDataSource();
+                dataSource.setJdbcUrl(tenant.getUrl());
+                dataSource.setUsername(tenant.getUsername());
+                dataSource.setPassword(tenant.getPassword());
+                dataSource.setDriverClassName("org.postgresql.Driver");
 
-            // Determine which database URL to use based on the db type
-            String dbUrl;
-            switch (dbType) {
-                case "flex":
-                    dbUrl = tenant.getFlexdb();
-                    break;
-                case "tac":
-                    dbUrl = tenant.getUrl();
-                    break;
-                case "read":
-                    dbUrl = tenant.getReaddb();
-                    break;
-                case "appstore":
-                    dbUrl = tenant.getAppstoredb();
-                    break;
-                default:
-                    dbUrl = tenant.getUrl();
-            }
+                // Configure connection pool settings
+                dataSource.setMinimumIdle(tenant.getMinIdle() != null ? tenant.getMinIdle() : 1);
+                dataSource.setMaximumPoolSize(tenant.getMaxPoolSize() != null ? tenant.getMaxPoolSize() : 5);
+                dataSource.setConnectionTimeout(tenant.getConnectionTimeout() != null ? tenant.getConnectionTimeout() : 30000);
+                dataSource.setIdleTimeout(tenant.getIdleTimeout() != null ? tenant.getIdleTimeout() : 600000);
+                dataSource.setPoolName("HikariPool-" + tenant.getTenantId());
 
-            if (dbUrl == null || dbUrl.isEmpty()) {
-                throw new DataSourceLookupFailureException("No database URL found for tenant " + tenantId + " and db type " + dbType);
-            }
-
-            // Create a new data source
-            HikariDataSource dataSource = new HikariDataSource();
-            dataSource.setDriverClassName("org.postgresql.Driver");
-            dataSource.setJdbcUrl(dbUrl);
-            dataSource.setUsername(tenant.getUsername());
-            dataSource.setPassword(tenant.getPassword());
-
-            // Parse DB properties from JSON string
-            if (tenant.getDbProperties() != null && !tenant.getDbProperties().isEmpty()) {
-                Map<String, Object> dbProps = objectMapper.readValue(tenant.getDbProperties(), Map.class);
-
-                if (dbProps.containsKey("connectionTimeout") && tenant.getConnectionTimeout() == null) {
-                    dataSource.setConnectionTimeout(Long.parseLong(dbProps.get("connectionTimeout").toString()));
-                } else if (tenant.getConnectionTimeout() != null) {
-                    dataSource.setConnectionTimeout(tenant.getConnectionTimeout());
-                }
-
-                if (dbProps.containsKey("idleTimeout") && tenant.getIdleTimeout() == null) {
-                    dataSource.setIdleTimeout(Long.parseLong(dbProps.get("idleTimeout").toString()));
-                } else if (tenant.getIdleTimeout() != null) {
-                    dataSource.setIdleTimeout(tenant.getIdleTimeout());
-                }
-
-                if (dbProps.containsKey("maxPoolSize") && tenant.getMaxPoolSize() == null) {
-                    dataSource.setMaximumPoolSize(Integer.parseInt(dbProps.get("maxPoolSize").toString()));
-                } else if (tenant.getMaxPoolSize() != null) {
-                    dataSource.setMaximumPoolSize(tenant.getMaxPoolSize());
-                }
-
-                if (dbProps.containsKey("minIdle") && tenant.getMinIdle() == null) {
-                    dataSource.setMinimumIdle(Integer.parseInt(dbProps.get("minIdle").toString()));
-                } else if (tenant.getMinIdle() != null) {
-                    dataSource.setMinimumIdle(tenant.getMinIdle());
-                }
+                log.info("Created data source for tenant {}", tenant.getTenantId());
+                return dataSource;
             } else {
-                // Default values
-                dataSource.setConnectionTimeout(30000);
-                dataSource.setIdleTimeout(600000);
-                dataSource.setMaxLifetime(1800000);
-                dataSource.setMaximumPoolSize(10);
-                dataSource.setMinimumIdle(5);
+                log.warn("Tenant {} not found or not active", tenantId);
+                return getDefaultDataSource();
             }
-
-            return dataSource;
         } catch (Exception e) {
-            log.error("Error creating data source for tenant: {} and db type: {}", tenantId, dbType, e);
-            throw new DataSourceLookupFailureException("Failed to create data source for tenant: " + tenantId, e);
+            log.error("Error creating data source for tenant {}: {}", tenantId, e.getMessage(), e);
+            return getDefaultDataSource();
         }
+    }
+
+    /**
+     * Gets the default data source.
+     *
+     * @return The default data source
+     */
+    public DataSource getDefaultDataSource() {
+        if (tenantDataSources.containsKey(defaultTenant)) {
+            return tenantDataSources.get(defaultTenant);
+        }
+
+        // Try to find the default tenant in the master database
+        Optional<MasterTenant> defaultTenantOpt = masterTenantRepository.findByTenantId(defaultTenant);
+        if (defaultTenantOpt.isPresent()) {
+            DataSource dataSource = createDataSource(defaultTenant);
+            tenantDataSources.put(defaultTenant, dataSource);
+            return dataSource;
+        }
+
+        // If the default tenant is not found, create a dummy data source
+        log.warn("Default tenant {} not found, creating dummy data source", defaultTenant);
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl("jdbc:h2:mem:default");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("");
+        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setPoolName("DefaultHikariPool");
+
+        tenantDataSources.put(defaultTenant, dataSource);
+        return dataSource;
     }
 }
