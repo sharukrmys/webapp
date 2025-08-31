@@ -45,6 +45,7 @@ dependencies {
     
     // Redis
     api 'org.springframework.boot:spring-boot-starter-data-redis'
+    api 'org.redisson:redisson:3.27.2'
     
     // Database
     api 'org.postgresql:postgresql'
