@@ -13,8 +13,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     
+    // Spring Cloud
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'io.github.openfeign:feign-okhttp'
+    
     // JWT
     implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+    
+    // AWS
+    implementation 'software.amazon.awssdk:athena'
     
     // Database
     implementation 'org.postgresql:postgresql'

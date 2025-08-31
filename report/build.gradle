@@ -12,6 +12,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     
+    // Spring Cloud
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'io.github.openfeign:feign-okhttp'
+    
+    // AWS
+    implementation 'software.amazon.awssdk:athena'
+    
     // Database
     implementation 'org.postgresql:postgresql'
     implementation 'com.h2database:h2'
