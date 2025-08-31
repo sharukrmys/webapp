@@ -22,18 +22,11 @@ subprojects {
         targetCompatibility = JavaVersion.toVersion(javaVersion)
     }
     
-    dependencyManagement {
-        imports {
-            mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
-        }
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
     }
     
-    dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter'
-        testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    }
-    
-    tasks.named('test') {
+    test {
         useJUnitPlatform()
     }
 }
